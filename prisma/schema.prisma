@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  WON
+  LOST
+}
+
+enum AgentEventStatus {
+  RECEIVED
+  PROCESSED
+  FAILED
+}
+
+model Lead {
+  id         String     @id @default(cuid())
+  email      String     @unique
+  nom        String?
+  entreprise String?
+  statut     LeadStatus @default(NEW)
+  source     String?
+  metadata   Json?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  @@map("leads")
+}
+
+model AgentEvent {
+  id         String            @id @default(cuid())
+  agentName  String
+  eventType  String
+  payload    Json?
+  status     AgentEventStatus  @default(RECEIVED)
+  createdAt  DateTime          @default(now())
+
+  @@map("agent_events")
+}

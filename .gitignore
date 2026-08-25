@@ -4,3 +4,7 @@ dist/
 *.log
 npm-debug.log*
 .DS_Store
+
+# Base de données SQLite locale (générée par Prisma)
+prisma/*.db
+prisma/*.db-journal
