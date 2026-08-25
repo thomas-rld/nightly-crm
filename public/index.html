@@ -6,7 +6,7 @@
 <title>Nightly CRM · Infrastructure B2B de la nuit</title>
 <link rel="icon" href="data:," />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
   tailwind.config = {
@@ -15,19 +15,32 @@
       extend: {
         fontFamily: {
           sans: ["Inter", "sans-serif"],
+          display: ["Sora", "Inter", "sans-serif"],
           mono: ["JetBrains Mono", "monospace"],
         },
         colors: {
           surface: {
-            DEFAULT: "#0b0f19",
-            50: "#131a2a",
-            100: "#161d30",
-            200: "#1c2438",
-            300: "#232c44",
+            DEFAULT: "#0a0d16",
+            50: "#10141f",
+            100: "#141827",
+            200: "#1a2033",
+            300: "#232b42",
           },
         },
         boxShadow: {
-          panel: "0 1px 0 0 rgba(255,255,255,0.04) inset, 0 8px 24px -12px rgba(0,0,0,0.6)",
+          panel: "0 1px 0 0 rgba(255,255,255,0.04) inset, 0 8px 28px -14px rgba(0,0,0,0.65)",
+          "glow-indigo": "0 0 0 1px rgba(99,102,241,0.18), 0 10px 30px -10px rgba(99,102,241,0.35)",
+          "glow-rose": "0 0 0 1px rgba(244,63,94,0.22), 0 10px 30px -8px rgba(244,63,94,0.4)",
+          "glow-emerald": "0 0 0 1px rgba(16,185,129,0.18), 0 10px 26px -10px rgba(16,185,129,0.32)",
+        },
+        keyframes: {
+          "pulse-soft": {
+            "0%, 100%": { opacity: 1 },
+            "50%": { opacity: 0.45 },
+          },
+        },
+        animation: {
+          "pulse-soft": "pulse-soft 2.4s ease-in-out infinite",
         },
       },
     },
@@ -35,38 +48,35 @@
 </script>
 <link rel="stylesheet" href="/styles.css" />
 </head>
-<body class="bg-surface text-slate-200 font-sans antialiased min-h-screen">
-
-  <!-- Bandeau de test synchro -->
-  <div class="sticky top-0 z-50 bg-red-600 text-white text-center text-sm font-bold uppercase tracking-widest py-2">
-    TEST SYNCHRO NIGHTLY
-  </div>
+<body class="bg-surface text-slate-300 font-sans antialiased min-h-screen">
 
   <div class="min-h-screen flex flex-col">
     <!-- Header -->
-    <header class="border-b border-surface-300/60 bg-surface-50/60 backdrop-blur sticky top-0 z-30">
+    <header class="border-b border-white/10 bg-surface/70 backdrop-blur-xl sticky top-0 z-30">
       <div class="max-w-[1500px] mx-auto px-6 py-4 flex items-center justify-between gap-4">
         <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-lg bg-surface-200 flex items-center justify-center font-bold shadow-lg" style="color: #00FF66; text-shadow: 0 0 8px #00FF66, 0 0 16px #00FF66;">N</div>
+          <div class="relative w-9 h-9 rounded-xl bg-surface-100 ring-1 ring-inset ring-white/10 flex items-center justify-center font-display font-bold text-transparent bg-clip-text bg-gradient-to-br from-indigo-300 via-violet-300 to-cyan-300 shadow-[0_0_18px_-2px_rgba(129,140,248,0.55)]">
+            N
+          </div>
           <div>
-            <h1 class="text-base font-semibold text-white leading-tight">Nightly CRM</h1>
+            <h1 class="text-base font-display font-semibold text-white leading-tight tracking-tight">Nightly CRM</h1>
             <p class="text-xs text-slate-500 leading-tight">Infrastructure opérationnelle B2B de la nuit</p>
           </div>
         </div>
         <div class="flex items-center gap-3">
-          <div class="hidden sm:flex items-center gap-2 text-xs text-slate-400 bg-surface-100 border border-surface-300/60 rounded-full px-3 py-1.5">
+          <div class="hidden sm:flex items-center gap-2 text-xs text-slate-400 bg-white/[0.03] ring-1 ring-inset ring-white/10 rounded-full px-3 py-1.5">
             <span class="relative flex h-2 w-2">
-              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span class="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-pulse-soft"></span>
               <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
             </span>
-            <span id="clock" class="font-mono"></span>
+            <span id="clock" class="font-mono tabular-nums"></span>
           </div>
-          <button id="refresh-all" type="button"
-            class="inline-flex items-center gap-2 rounded-lg bg-surface-100 hover:bg-surface-200 border border-surface-300/60 text-xs font-medium text-slate-200 px-3 py-2 transition-colors">
+          <button id="refresh-all" type="button" aria-label="Actualiser toutes les données"
+            class="inline-flex items-center gap-2 rounded-lg bg-white/[0.03] hover:bg-white/[0.07] ring-1 ring-inset ring-white/10 hover:ring-white/20 text-xs font-medium text-slate-200 px-3 py-2 transition-colors duration-200 cursor-pointer">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
             </svg>
-            Actualiser
+            <span class="hidden sm:inline">Actualiser</span>
           </button>
         </div>
       </div>
@@ -76,52 +86,68 @@
 
       <!-- Stat cards -->
       <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="rounded-xl bg-surface-50 border border-surface-300/60 shadow-panel p-5 flex items-center gap-4">
-          <div class="w-11 h-11 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center flex-shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="w-5 h-5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 9V4.5M9 9H4.5M9 9 3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5 5.25 5.25" />
-            </svg>
+        <div class="relative rounded-2xl bg-white/[0.03] backdrop-blur-xl ring-1 ring-inset ring-white/10 shadow-panel p-5 overflow-hidden transition-colors duration-200 hover:ring-white/20">
+          <div class="neon-hairline absolute top-0 inset-x-0"></div>
+          <div class="flex items-center gap-4">
+            <div class="w-11 h-11 rounded-xl bg-indigo-500/10 ring-1 ring-inset ring-indigo-500/25 text-indigo-300 flex items-center justify-center flex-shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
+              </svg>
+            </div>
+            <div class="min-w-0">
+              <p class="text-xs font-medium text-slate-500">Talents actifs</p>
+              <p id="stat-active-talents" class="text-3xl font-display font-bold text-white leading-tight mt-0.5 tabular-nums">–</p>
+            </div>
           </div>
-          <div>
-            <p class="text-xs font-medium text-slate-500">Talents actifs</p>
-            <p id="stat-active-talents" class="text-2xl font-bold text-white leading-tight mt-0.5">–</p>
-          </div>
+          <div id="stat-active-badge" class="mt-3 inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-400 bg-white/[0.03] ring-1 ring-inset ring-white/10 rounded-full px-2 py-1"></div>
         </div>
 
-        <div class="rounded-xl bg-surface-50 border border-surface-300/60 shadow-panel p-5 flex items-center gap-4">
-          <div class="w-11 h-11 rounded-lg bg-violet-500/10 text-violet-400 flex items-center justify-center flex-shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="w-5 h-5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
-            </svg>
+        <div class="relative rounded-2xl bg-white/[0.03] backdrop-blur-xl ring-1 ring-inset ring-white/10 shadow-panel p-5 overflow-hidden transition-colors duration-200 hover:ring-white/20">
+          <div class="neon-hairline absolute top-0 inset-x-0"></div>
+          <div class="flex items-center gap-4">
+            <div class="w-11 h-11 rounded-xl bg-violet-500/10 ring-1 ring-inset ring-violet-500/25 text-violet-300 flex items-center justify-center flex-shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+              </svg>
+            </div>
+            <div class="min-w-0">
+              <p class="text-xs font-medium text-slate-500">Bookings ce week-end</p>
+              <p id="stat-weekend-bookings" class="text-3xl font-display font-bold text-white leading-tight mt-0.5 tabular-nums">–</p>
+            </div>
           </div>
-          <div>
-            <p class="text-xs font-medium text-slate-500">Bookings ce week-end</p>
-            <p id="stat-weekend-bookings" class="text-2xl font-bold text-white leading-tight mt-0.5">–</p>
-          </div>
+          <div id="stat-weekend-badge" class="mt-3 inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-400 bg-white/[0.03] ring-1 ring-inset ring-white/10 rounded-full px-2 py-1"></div>
         </div>
 
-        <div id="stat-card-urgent" class="rounded-xl bg-surface-50 border border-rose-500/30 shadow-panel p-5 flex items-center gap-4 transition-colors">
-          <div class="w-11 h-11 rounded-lg bg-rose-500/10 text-rose-400 flex items-center justify-center flex-shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="w-5 h-5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-            </svg>
+        <div id="stat-card-urgent" class="relative rounded-2xl bg-white/[0.03] backdrop-blur-xl ring-1 ring-inset ring-white/10 shadow-panel p-5 overflow-hidden transition-all duration-300">
+          <div id="stat-urgent-hairline" class="neon-hairline absolute top-0 inset-x-0"></div>
+          <div class="flex items-center gap-4">
+            <div class="w-11 h-11 rounded-xl bg-rose-500/10 ring-1 ring-inset ring-rose-500/25 text-rose-300 flex items-center justify-center flex-shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+              </svg>
+            </div>
+            <div class="min-w-0">
+              <p class="text-xs font-medium text-slate-500">Alertes Urgence <span class="text-rose-400">(ce soir)</span></p>
+              <p id="stat-urgent" class="text-3xl font-display font-bold text-white leading-tight mt-0.5 tabular-nums">–</p>
+            </div>
           </div>
-          <div>
-            <p class="text-xs font-medium text-slate-500">Alertes Urgence <span class="text-rose-400">(ce soir)</span></p>
-            <p id="stat-urgent" class="text-2xl font-bold text-white leading-tight mt-0.5">–</p>
-          </div>
+          <div id="stat-urgent-badge" class="mt-3 inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-400 bg-white/[0.03] ring-1 ring-inset ring-white/10 rounded-full px-2 py-1"></div>
         </div>
 
-        <div class="rounded-xl bg-surface-50 border border-surface-300/60 shadow-panel p-5 flex items-center gap-4">
-          <div class="w-11 h-11 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center flex-shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="w-5 h-5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941" />
-            </svg>
+        <div class="relative rounded-2xl bg-white/[0.03] backdrop-blur-xl ring-1 ring-inset ring-white/10 shadow-panel p-5 overflow-hidden transition-colors duration-200 hover:ring-white/20">
+          <div class="neon-hairline absolute top-0 inset-x-0"></div>
+          <div class="flex items-center gap-4">
+            <div class="w-11 h-11 rounded-xl bg-emerald-500/10 ring-1 ring-inset ring-emerald-500/25 text-emerald-300 flex items-center justify-center flex-shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941" />
+              </svg>
+            </div>
+            <div class="min-w-0">
+              <p class="text-xs font-medium text-slate-500">Volume d'affaires généré</p>
+              <p id="stat-revenue" class="text-3xl font-display font-bold text-white leading-tight mt-0.5 tabular-nums">–</p>
+            </div>
           </div>
-          <div>
-            <p class="text-xs font-medium text-slate-500">Volume d'affaires généré</p>
-            <p id="stat-revenue" class="text-2xl font-bold text-white leading-tight mt-0.5">–</p>
-          </div>
+          <div id="stat-revenue-badge" class="mt-3 inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-400 bg-white/[0.03] ring-1 ring-inset ring-white/10 rounded-full px-2 py-1"></div>
         </div>
       </section>
 
@@ -129,49 +155,50 @@
       <section class="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 flex-1 min-h-0">
 
         <!-- Talents table -->
-        <div class="rounded-xl bg-surface-50 border border-surface-300/60 shadow-panel flex flex-col min-h-0 overflow-hidden">
-          <div class="p-4 border-b border-surface-300/60 flex flex-col gap-3">
+        <div class="rounded-2xl bg-white/[0.03] backdrop-blur-xl ring-1 ring-inset ring-white/10 shadow-panel flex flex-col min-h-0 overflow-hidden">
+          <div class="p-4 border-b border-white/10 flex flex-col gap-3">
             <div class="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
               <div>
-                <h2 class="text-sm font-semibold text-white">Talents</h2>
-                <p class="text-xs text-slate-500 mt-0.5"><span id="talents-count">0</span> résultat(s)</p>
+                <h2 class="text-sm font-display font-semibold text-white">Talents</h2>
+                <p class="text-xs text-slate-500 mt-0.5"><span id="talents-count" class="tabular-nums">0</span> résultat(s)</p>
               </div>
               <div class="relative">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
                   class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">
                   <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                 </svg>
+                <label for="search-input" class="sr-only">Rechercher un talent</label>
                 <input id="search-input" type="text" placeholder="Rechercher un talent (nom, style, ville)…"
-                  class="bg-surface-100 border border-surface-300/60 rounded-lg pl-9 pr-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 w-full sm:w-72 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition" />
+                  class="bg-white/[0.03] ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-indigo-400/60 rounded-lg pl-9 pr-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 w-full sm:w-72 focus:outline-none transition-shadow" />
               </div>
             </div>
 
             <div class="flex flex-wrap items-center gap-2 justify-between">
-              <div id="type-filters" class="flex items-center gap-2 flex-wrap"></div>
-              <button id="sos-toggle" type="button"
-                class="inline-flex items-center gap-2 rounded-full border border-rose-500/40 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20 text-xs font-semibold px-3.5 py-2 transition-colors">
-                <span class="relative flex h-2 w-2">
-                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                  <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
-                </span>
+              <div id="type-filters" class="flex items-center gap-2 flex-wrap" role="group" aria-label="Filtrer par métier"></div>
+              <button id="sos-toggle" type="button" aria-pressed="false"
+                class="inline-flex items-center gap-2 rounded-full ring-1 ring-inset ring-rose-500/40 bg-rose-500/10 text-rose-300 hover:bg-rose-500/15 text-xs font-semibold px-3.5 py-2 transition-all duration-200 cursor-pointer">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                </svg>
                 SOS Remplacement (Dispo ce soir)
+                <span id="sos-count" class="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-rose-500/20 text-rose-200 text-[10px] font-bold tabular-nums">–</span>
               </button>
             </div>
           </div>
 
           <div class="flex-1 overflow-auto">
             <table class="w-full text-sm">
-              <thead class="sticky top-0 bg-surface-100 text-slate-400 text-xs uppercase tracking-wide">
+              <thead class="sticky top-0 bg-surface-100/90 backdrop-blur text-slate-500 text-[11px] uppercase tracking-wider">
                 <tr>
-                  <th class="text-left font-medium px-4 py-2.5">Talent</th>
-                  <th class="text-left font-medium px-4 py-2.5 hidden md:table-cell">Style</th>
-                  <th class="text-left font-medium px-4 py-2.5 hidden lg:table-cell">Ville</th>
-                  <th class="text-left font-medium px-4 py-2.5 hidden sm:table-cell">Tarif</th>
-                  <th class="text-left font-medium px-4 py-2.5">Note</th>
-                  <th class="text-right font-medium px-4 py-2.5">Dispo ce soir</th>
+                  <th class="text-left font-semibold px-4 py-2.5">Talent</th>
+                  <th class="text-left font-semibold px-4 py-2.5 hidden md:table-cell">Style</th>
+                  <th class="text-left font-semibold px-4 py-2.5 hidden lg:table-cell">Ville</th>
+                  <th class="text-left font-semibold px-4 py-2.5 hidden sm:table-cell">Tarif</th>
+                  <th class="text-left font-semibold px-4 py-2.5">Note</th>
+                  <th class="text-right font-semibold px-4 py-2.5">Dispo ce soir</th>
                 </tr>
               </thead>
-              <tbody id="talents-tbody" class="divide-y divide-surface-300/40"></tbody>
+              <tbody id="talents-tbody" class="divide-y divide-white/[0.06]"></tbody>
             </table>
             <div id="talents-empty" class="hidden text-center text-sm text-slate-500 py-12">
               Aucun talent ne correspond à votre recherche.
@@ -183,27 +210,27 @@
         </div>
 
         <!-- Bookings panel -->
-        <aside class="rounded-xl bg-surface-50 border border-surface-300/60 shadow-panel flex flex-col min-h-0 overflow-hidden">
-          <div class="p-4 border-b border-surface-300/60 flex items-center justify-between">
+        <aside class="rounded-2xl bg-white/[0.03] backdrop-blur-xl ring-1 ring-inset ring-white/10 shadow-panel flex flex-col min-h-0 overflow-hidden">
+          <div class="p-4 border-b border-white/10 flex items-center justify-between">
             <div>
-              <h2 class="text-sm font-semibold text-white">Demandes de booking</h2>
+              <h2 class="text-sm font-display font-semibold text-white">Demandes de booking</h2>
               <p class="text-xs text-slate-500 mt-0.5">Suivi opérationnel en direct</p>
             </div>
-            <button id="refresh-bookings" type="button" title="Actualiser les demandes"
-              class="w-8 h-8 flex items-center justify-center rounded-lg bg-surface-100 hover:bg-surface-200 border border-surface-300/60 text-slate-300 transition-colors">
+            <button id="refresh-bookings" type="button" aria-label="Actualiser les demandes de booking"
+              class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/[0.03] hover:bg-white/[0.08] ring-1 ring-inset ring-white/10 hover:ring-white/20 text-slate-300 transition-colors duration-200 cursor-pointer">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
               </svg>
             </button>
           </div>
 
-          <div id="booking-status-filters" class="flex items-center gap-1.5 px-4 py-3 border-b border-surface-300/60 overflow-x-auto"></div>
+          <div id="booking-status-filters" class="flex items-center gap-1.5 px-4 py-3 border-b border-white/10 overflow-x-auto" role="group" aria-label="Filtrer par statut"></div>
 
-          <div id="bookings-list" class="flex-1 overflow-auto divide-y divide-surface-300/40"></div>
+          <div id="bookings-list" class="flex-1 overflow-auto divide-y divide-white/[0.06]"></div>
           <div id="bookings-loading" class="text-center text-sm text-slate-500 py-10">Chargement des demandes…</div>
-          <div class="px-4 py-2 border-t border-surface-300/60 text-[11px] text-slate-500 flex items-center justify-between">
+          <div class="px-4 py-2 border-t border-white/10 text-[11px] text-slate-500 flex items-center justify-between">
             <span>Rafraîchissement auto</span>
-            <span id="bookings-refresh-countdown" class="font-mono">20s</span>
+            <span id="bookings-refresh-countdown" class="font-mono tabular-nums">20s</span>
           </div>
         </aside>
       </section>
@@ -215,22 +242,22 @@
   </div>
 
   <!-- Drawer overlay -->
-  <div id="drawer-overlay" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity"></div>
+  <div id="drawer-overlay" class="hidden fixed inset-0 bg-surface/70 backdrop-blur-sm z-40 transition-opacity"></div>
 
   <!-- Drawer -->
-  <aside id="drawer"
-    class="fixed top-0 right-0 h-full w-full sm:w-[440px] bg-surface-100 border-l border-surface-300/60 z-50 translate-x-full transition-transform duration-300 ease-out flex flex-col shadow-2xl">
-    <div class="p-5 border-b border-surface-300/60 flex items-start justify-between gap-3">
+  <aside id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-name"
+    class="fixed top-0 right-0 h-full w-full sm:w-[440px] bg-surface-50/95 backdrop-blur-xl border-l border-white/10 z-50 translate-x-full transition-transform duration-300 ease-out flex flex-col shadow-2xl">
+    <div class="p-5 border-b border-white/10 flex items-start justify-between gap-3">
       <div class="flex items-start gap-3">
-        <div id="drawer-avatar" class="w-11 h-11 rounded-full bg-surface-200 text-slate-200 text-sm font-semibold flex items-center justify-center flex-shrink-0">—</div>
+        <div id="drawer-avatar" class="w-12 h-12 rounded-full bg-surface-200 ring-1 ring-inset ring-white/10 text-slate-200 text-sm font-display font-semibold flex items-center justify-center flex-shrink-0">—</div>
         <div>
           <p class="text-xs text-slate-500">Fiche talent</p>
-          <h3 id="drawer-name" class="text-lg font-semibold text-white mt-0.5">—</h3>
+          <h3 id="drawer-name" class="text-lg font-display font-semibold text-white mt-0.5 leading-tight">—</h3>
           <p id="drawer-style" class="text-sm text-slate-400 mt-0.5">—</p>
         </div>
       </div>
-      <button id="drawer-close" type="button"
-        class="w-8 h-8 flex items-center justify-center rounded-lg bg-surface-200 hover:bg-surface-300 text-slate-300 transition-colors flex-shrink-0">
+      <button id="drawer-close" type="button" aria-label="Fermer la fiche talent"
+        class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/[0.04] hover:bg-white/[0.09] ring-1 ring-inset ring-white/10 text-slate-300 transition-colors duration-200 flex-shrink-0 cursor-pointer">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4">
           <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
         </svg>
@@ -240,23 +267,33 @@
     <div class="flex-1 overflow-auto p-5 space-y-5">
       <div id="drawer-badges" class="flex items-center gap-2 flex-wrap"></div>
 
-      <p id="drawer-bio" class="text-sm text-slate-300 leading-relaxed bg-surface-50 border border-surface-300/60 rounded-lg p-3">—</p>
+      <p id="drawer-bio" class="text-sm text-slate-300 leading-relaxed bg-white/[0.03] ring-1 ring-inset ring-white/10 rounded-xl p-3">—</p>
 
       <dl class="grid grid-cols-2 gap-3 text-sm">
-        <div class="bg-surface-50 border border-surface-300/60 rounded-lg p-3">
+        <div class="bg-white/[0.03] ring-1 ring-inset ring-white/10 rounded-xl p-3">
           <dt class="text-xs text-slate-500">Ville</dt>
           <dd id="drawer-city" class="text-slate-200 mt-1">—</dd>
         </div>
-        <div class="bg-surface-50 border border-surface-300/60 rounded-lg p-3">
+        <div class="bg-white/[0.03] ring-1 ring-inset ring-white/10 rounded-xl p-3">
           <dt class="text-xs text-slate-500">Tarif indicatif</dt>
           <dd id="drawer-tarif" class="text-slate-200 mt-1">—</dd>
         </div>
-        <div class="bg-surface-50 border border-surface-300/60 rounded-lg p-3">
-          <dt class="text-xs text-slate-500">Instagram</dt>
+        <div class="bg-white/[0.03] ring-1 ring-inset ring-white/10 rounded-xl p-3">
+          <dt class="text-xs text-slate-500 flex items-center gap-1.5">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5">
+              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z" />
+            </svg>
+            Instagram
+          </dt>
           <dd id="drawer-instagram" class="text-indigo-300 mt-1 break-all">—</dd>
         </div>
-        <div class="bg-surface-50 border border-surface-300/60 rounded-lg p-3">
-          <dt id="drawer-portfolio-label" class="text-xs text-slate-500">Mixcloud</dt>
+        <div class="bg-white/[0.03] ring-1 ring-inset ring-white/10 rounded-xl p-3">
+          <dt id="drawer-portfolio-label" class="text-xs text-slate-500 flex items-center gap-1.5">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="w-3.5 h-3.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
+            </svg>
+            Mixcloud
+          </dt>
           <dd id="drawer-portfolio-url" class="text-indigo-300 mt-1 break-all">—</dd>
         </div>
       </dl>
@@ -266,25 +303,25 @@
         <div id="drawer-portfolio" class="grid grid-cols-1 gap-2"></div>
       </div>
 
-      <div class="pt-2 border-t border-surface-300/60">
+      <div class="pt-2 border-t border-white/10">
         <button id="propose-date-btn" type="button"
-          class="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-500 hover:bg-indigo-400 text-white text-sm font-semibold px-4 py-2.5 transition-colors">
+          class="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 hover:from-indigo-400 hover:to-violet-400 text-white text-sm font-semibold px-4 py-2.5 shadow-glow-indigo transition-all duration-200 cursor-pointer">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="w-4 h-4">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
           </svg>
           Proposer une date
         </button>
 
-        <form id="propose-date-form" class="hidden mt-3 space-y-3 bg-surface-50 border border-surface-300/60 rounded-lg p-3">
+        <form id="propose-date-form" class="hidden mt-3 space-y-3 bg-white/[0.03] ring-1 ring-inset ring-white/10 rounded-xl p-3">
           <div>
             <label class="text-xs text-slate-500 block mb-1" for="propose-date-input">Date de l'événement</label>
             <input id="propose-date-input" type="date" required
-              class="w-full bg-surface-100 border border-surface-300/60 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50" />
+              class="w-full bg-surface-100 ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-indigo-400/60 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none transition-shadow" />
           </div>
           <div>
             <label class="text-xs text-slate-500 block mb-1" for="propose-slot-input">Créneau horaire</label>
             <select id="propose-slot-input"
-              class="w-full bg-surface-100 border border-surface-300/60 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50">
+              class="w-full bg-surface-100 ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-indigo-400/60 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none transition-shadow">
               <option>20h00 - 00h00</option>
               <option>22h00 - 02h00</option>
               <option>23h00 - 05h00</option>
@@ -294,15 +331,15 @@
           <div>
             <label class="text-xs text-slate-500 block mb-1" for="propose-budget-input">Budget proposé (€)</label>
             <input id="propose-budget-input" type="number" min="0" step="10" placeholder="450"
-              class="w-full bg-surface-100 border border-surface-300/60 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50" />
+              class="w-full bg-surface-100 ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-indigo-400/60 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none transition-shadow" />
           </div>
           <button type="submit"
-            class="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-surface text-sm font-semibold px-4 py-2.5 transition-colors">
+            class="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-surface text-sm font-semibold px-4 py-2.5 transition-colors duration-200 cursor-pointer">
             Envoyer la demande
           </button>
         </form>
 
-        <p id="propose-date-confirmation" class="hidden mt-3 text-sm text-emerald-300 bg-emerald-500/10 ring-1 ring-inset ring-emerald-500/30 rounded-lg p-3"></p>
+        <p id="propose-date-confirmation" class="hidden mt-3 text-sm text-emerald-300 bg-emerald-500/10 ring-1 ring-inset ring-emerald-500/30 rounded-xl p-3"></p>
       </div>
     </div>
   </aside>
