@@ -3,9 +3,9 @@ import { fileURLToPath } from "node:url";
 import Fastify from "fastify";
 import fastifyStatic from "@fastify/static";
 
-import leadsRoutes from "./routes/leads.js";
+import talentsRoutes from "./routes/talents.js";
+import bookingsRoutes from "./routes/bookings.js";
 import statsRoutes from "./routes/stats.js";
-import eventsRoutes from "./routes/events.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const publicDir = path.join(__dirname, "..", "public");
@@ -18,9 +18,9 @@ await fastify.register(fastifyStatic, {
   index: "index.html",
 });
 
-await fastify.register(leadsRoutes);
+await fastify.register(talentsRoutes);
+await fastify.register(bookingsRoutes);
 await fastify.register(statsRoutes);
-await fastify.register(eventsRoutes);
 
 fastify.get("/", (request, reply) => {
   return reply.sendFile("index.html");

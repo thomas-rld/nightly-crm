@@ -1,7 +1,38 @@
-// In-memory data store for the CRM dashboard demo.
-// Seeded once at boot with realistic leads and agent events.
+// In-memory data store for the Nightly CRM dashboard demo.
+// Seeded once at boot with realistic talents, buyers and booking requests
+// representing the B2B operational backbone of the nightlife industry.
 
-const STATUSES = ["new", "contacted", "qualified", "converted", "lost"];
+export const TALENT_TYPES = ["dj", "photographe", "videaste"];
+export const BOOKING_STATUSES = ["en_attente", "confirme", "urgence", "termine"];
+export const BUYER_TYPES = ["club", "bar", "organisateur"];
+
+const CITIES = [
+  "Paris", "Lyon", "Marseille", "Bordeaux", "Lille", "Toulouse",
+  "Nice", "Nantes", "Strasbourg", "Montpellier",
+];
+
+const DJ_ALIASES = [
+  "DJ Nova", "DJ Kalyps", "Miss Vertigo", "DJ Aether", "Selecta Yuna",
+  "DJ Mirage", "Warehouse Nyx", "DJ Solstice", "Baseline Rey", "DJ Cassiopee",
+  "Night Rex", "DJ Lumen", "Studio 22", "DJ Odessa", "Krypto Faye",
+  "DJ Ombre", "DJ Velvet", "Low End Theo", "DJ Prism", "Nocturna B2B",
+];
+
+const DJ_STYLES = [
+  "House", "Techno", "Afro House", "Hip-Hop / RnB", "Electro Pop",
+  "Minimal / Deep House", "Disco / Funk", "Reggaeton / Latino",
+  "Drum & Bass", "Open Format",
+];
+
+const PHOTO_STYLES = [
+  "Evenementiel nocturne", "Portrait backstage", "Reportage clubbing",
+  "Mode & editorial", "Concert live",
+];
+
+const VIDEO_STYLES = [
+  "Aftermovie", "Clip live", "Reels reseaux sociaux",
+  "Teaser evenementiel", "Interview backstage",
+];
 
 const FIRST_NAMES = [
   "Camille", "Lucas", "Emma", "Nathan", "Chloe", "Louis", "Manon", "Hugo",
@@ -15,47 +46,32 @@ const LAST_NAMES = [
   "Garcia", "David", "Bertrand", "Roux", "Vincent", "Fontaine",
 ];
 
-const COMPANIES = [
-  "Nimbus Cloud", "Aurora Robotics", "Fintra Labs", "Solara Energy",
-  "Quantix Analytics", "Vertex Biotech", "Pixelforge Studio", "Northwind Logistics",
-  "Bluewave Media", "Cobalt Systems", "Ionix Manufacturing", "Cedar Financial",
-  "Meridian Health", "Orbital Software", "Terraform Realty", "Lumen Networks",
+const PHOTO_BRANDS = ["Studio", "Objectif Nuit", "Reportage", "Clichés"];
+const VIDEO_BRANDS = ["Films", "Prod", "Aftermovie Studio", "Motion"];
+
+const CLUB_NAMES = [
+  "Le Nocturne", "Bassment Club", "Warehouse District", "Le Diamant Noir",
+  "La Rotonde Underground", "Kollectif Nuit Blanche", "Le Sunset Social Club",
+  "Blackout Club", "La Sirene Electrique", "Le Repaire",
 ];
 
-const SOURCES = [
-  "site web", "webinaire", "salon professionnel", "recommandation",
-  "campagne email", "reseaux sociaux", "publicite payante", "partenaire",
+const BAR_NAMES = [
+  "Bar Mirage", "Rooftop 21", "Le Velvet Lounge", "Le Comptoir Nocturne",
+  "Bar Satellite", "L'Alcove", "Le Speakeasy 8", "Bar Zenith",
 ];
 
-const EVENT_TYPES = [
-  {
-    type: "lead.created",
-    message: (lead) => `Nouveau prospect capté : ${lead.name} (${lead.company})`,
-  },
-  {
-    type: "lead.enriched",
-    message: (lead) => `Fiche enrichie automatiquement pour ${lead.name}`,
-  },
-  {
-    type: "lead.scored",
-    message: (lead) => `Score IA recalculé pour ${lead.name}`,
-  },
-  {
-    type: "email.sent",
-    message: (lead) => `Email de qualification envoye a ${lead.name}`,
-  },
-  {
-    type: "lead.qualified",
-    message: (lead) => `${lead.name} marque comme qualifie par l'agent`,
-  },
-  {
-    type: "meeting.scheduled",
-    message: (lead) => `Rendez-vous propose a ${lead.name}`,
-  },
-  {
-    type: "lead.status_changed",
-    message: (lead) => `Statut de ${lead.name} mis a jour`,
-  },
+const ORGA_NAMES = [
+  "Pulse Events", "Nightline Productions", "Collectif Aurora", "Off The Grid Events",
+  "Halo Organisation", "Kaleido Events", "Full Moon Collective", "Reverb Agency",
+];
+
+const NOTES_TEMPLATES = [
+  "Client fidele, remet toujours ca l'annee suivante.",
+  "Premiere collaboration, tres bon retour de la salle.",
+  "Demande recurrente pour les soirees a theme.",
+  "A confirmer le materiel technique sur place.",
+  "Budget serre mais bonne visibilite pour le talent.",
+  "Prevoir un backup en cas d'annulation tardive.",
 ];
 
 function seededRandom(seed) {
@@ -76,6 +92,11 @@ function randomInt(min, max) {
   return Math.floor(rand() * (max - min + 1)) + min;
 }
 
+function randomFloat(min, max, decimals = 1) {
+  const value = rand() * (max - min) + min;
+  return Number(value.toFixed(decimals));
+}
+
 function slugify(value) {
   return value
     .toLowerCase()
@@ -84,116 +105,253 @@ function slugify(value) {
     .replace(/[^a-z0-9]+/g, "");
 }
 
-function buildMetadata(lead, index) {
-  return {
-    utm: {
-      source: pick(SOURCES),
-      campaign: `campagne-${2024}-${String(randomInt(1, 12)).padStart(2, "0")}`,
-      medium: pick(["organic", "cpc", "referral", "email", "social"]),
-    },
-    enrichment: {
-      companySize: pick(["1-10", "11-50", "51-200", "201-1000", "1000+"]),
-      industry: pick([
-        "SaaS", "Sante", "Finance", "Industrie", "Energie", "Media", "Logistique",
-      ]),
-      linkedin: `https://linkedin.com/in/${slugify(lead.name)}${index}`,
-      website: `https://${slugify(lead.company)}.com`,
-    },
-    aiScoring: {
-      score: lead.score,
-      confidence: Math.round(rand() * 40 + 60),
-      signals: [
-        pick(["a visite la page tarifs", "a telecharge un livre blanc", "a ouvert 3 emails"]),
-        pick(["a assiste au webinaire", "a demande une demo", "a interagi sur LinkedIn"]),
-      ],
-    },
-    activity: {
-      lastContact: new Date(lead.createdAt).toISOString(),
-      touchpoints: randomInt(1, 12),
-      notes: pick([
-        "Interesse par le plan Enterprise.",
-        "Souhaite un suivi apres son comite budgetaire.",
-        "Demande une integration avec son CRM existant.",
-        "En attente de validation interne.",
-        "Tres reactif, a relancer rapidement.",
-      ]),
-    },
-  };
+// --- Weekend window helper -------------------------------------------------
+// Groups Friday 00:00 -> Sunday 23:59:59 of the *current* calendar week as
+// "this weekend", regardless of which day "now" falls on.
+export function getWeekendRange(reference = new Date()) {
+  const now = new Date(reference);
+  const jsDay = now.getDay(); // 0 = Sunday ... 6 = Saturday
+  const mondayIndex = (jsDay + 6) % 7; // 0 = Monday ... 6 = Sunday
+
+  const weekStart = new Date(now);
+  weekStart.setHours(0, 0, 0, 0);
+  weekStart.setDate(weekStart.getDate() - mondayIndex);
+
+  const weekendStart = new Date(weekStart);
+  weekendStart.setDate(weekStart.getDate() + 4); // Friday 00:00
+
+  const weekendEnd = new Date(weekStart);
+  weekendEnd.setDate(weekStart.getDate() + 6);
+  weekendEnd.setHours(23, 59, 59, 999); // Sunday 23:59:59
+
+  return { start: weekendStart.getTime(), end: weekendEnd.getTime() };
 }
 
-function createLeads(count) {
-  const leads = [];
-  const now = Date.now();
+export function isToday(timestamp, reference = new Date()) {
+  const day = new Date(timestamp);
+  const now = new Date(reference);
+  return (
+    day.getFullYear() === now.getFullYear() &&
+    day.getMonth() === now.getMonth() &&
+    day.getDate() === now.getDate()
+  );
+}
 
-  for (let i = 0; i < count; i += 1) {
-    const firstName = pick(FIRST_NAMES);
-    const lastName = pick(LAST_NAMES);
-    const name = `${firstName} ${lastName}`;
-    const company = pick(COMPANIES);
-    const daysAgo = i < 5 ? 0 : randomInt(0, 45);
-    const hoursAgo = randomInt(0, 23);
-    const minutesAgo = randomInt(0, 59);
-    const createdAt = now - (daysAgo * 24 * 60 * 60 * 1000 + hoursAgo * 60 * 60 * 1000 + minutesAgo * 60 * 1000);
-    const status = i < 5 ? "new" : pick(STATUSES);
-    const score = randomInt(20, 99);
+function randomTimestampBetween(startMs, endMs) {
+  return Math.floor(startMs + rand() * (endMs - startMs));
+}
 
-    const lead = {
-      id: `lead_${(i + 1).toString().padStart(4, "0")}`,
-      name,
-      email: `${slugify(firstName)}.${slugify(lastName)}@${slugify(company)}.com`,
-      company,
-      phone: `+33 6 ${randomInt(10, 99)} ${randomInt(10, 99)} ${randomInt(10, 99)} ${randomInt(10, 99)}`,
-      status,
-      source: pick(SOURCES),
-      score,
-      createdAt,
-      updatedAt: createdAt + randomInt(0, 6) * 60 * 60 * 1000,
-    };
+// --- Talents -----------------------------------------------------------------
 
-    lead.metadata = buildMetadata(lead, i);
-    leads.push(lead);
+function buildTalentIdentity(type, index) {
+  if (type === "dj") {
+    const alias = DJ_ALIASES[index % DJ_ALIASES.length];
+    return { name: alias, handle: slugify(alias) };
   }
 
-  return leads.sort((a, b) => b.createdAt - a.createdAt);
+  const firstName = pick(FIRST_NAMES);
+  const lastName = pick(LAST_NAMES);
+  const brand = type === "photographe" ? pick(PHOTO_BRANDS) : pick(VIDEO_BRANDS);
+  const name = rand() > 0.5 ? `${firstName} ${lastName}` : `${brand} ${lastName}`;
+  return { name, handle: slugify(`${firstName}${lastName}${index}`) };
 }
 
-function createEvents(leads, count) {
-  const events = [];
+function buildPortfolio(type, name) {
+  if (type === "dj") {
+    return [
+      { title: "Warehouse Session - Peak Time", cover: "🎚️" },
+      { title: `B2B avec ${pick(DJ_ALIASES)}`, cover: "🎧" },
+      { title: "Boiler-style set - Rooftop", cover: "🔊" },
+    ];
+  }
+  if (type === "photographe") {
+    return [
+      { title: "Soiree Halloween - Reportage complet", cover: "📸" },
+      { title: "Backstage artistes - Festival", cover: "🖤" },
+      { title: "Portraits ambiance neon", cover: "✨" },
+    ];
+  }
+  return [
+    { title: "Aftermovie - Nuit blanche edition", cover: "🎬" },
+    { title: "Clip live - Main stage", cover: "🎥" },
+    { title: "Reels teaser - Soiree VIP", cover: "📱" },
+  ];
+}
+
+function buildBio(type, name, style, city) {
+  if (type === "dj") {
+    return `${name} enflamme les dancefloors de ${city} avec un set ${style.toLowerCase()}, entre selection pointue et lecture de la foule.`;
+  }
+  if (type === "photographe") {
+    return `Photographe basé(e) à ${city}, spécialisé(e) en ${style.toLowerCase()}. Capture l'énergie de la nuit sans jamais gêner l'événement.`;
+  }
+  return `Vidéaste basé(e) à ${city}, expert(e) en ${style.toLowerCase()}. Livraison rapide, montage dynamique calibré pour les réseaux sociaux.`;
+}
+
+function tarifRange(type) {
+  if (type === "dj") return [300, 1500];
+  if (type === "photographe") return [200, 800];
+  return [250, 1000];
+}
+
+function createTalents(count) {
+  const talents = [];
   const now = Date.now();
 
   for (let i = 0; i < count; i += 1) {
-    const lead = pick(leads);
-    const eventDef = pick(EVENT_TYPES);
-    const minutesAgo = i === 0 ? 0 : randomInt(i * 4, i * 4 + 90);
+    const roll = rand();
+    const type = roll < 0.45 ? "dj" : roll < 0.75 ? "photographe" : "videaste";
+    const style = type === "dj" ? pick(DJ_STYLES) : type === "photographe" ? pick(PHOTO_STYLES) : pick(VIDEO_STYLES);
+    const city = pick(CITIES);
+    const { name, handle } = buildTalentIdentity(type, i);
+    const [minTarif, maxTarif] = tarifRange(type);
+    const tarif = randomInt(minTarif, maxTarif);
+    const note = randomFloat(3.5, 5, 1);
+    const reviewsCount = randomInt(5, 130);
+    const availableTonight = rand() < 0.22;
+    const status = rand() < 0.92 ? "actif" : "inactif";
+    const createdAt = now - randomInt(1, 400) * 24 * 60 * 60 * 1000;
 
-    events.push({
-      id: `evt_${(i + 1).toString().padStart(4, "0")}`,
-      type: eventDef.type,
-      leadId: lead.id,
-      leadName: lead.name,
-      message: eventDef.message(lead),
-      createdAt: now - minutesAgo * 60 * 1000,
-      payload: {
-        leadId: lead.id,
-        status: lead.status,
-        source: lead.source,
-        agent: pick(["agent-scout", "agent-scoring", "agent-outreach", "agent-scheduler"]),
-      },
+    const talent = {
+      id: `talent_${(i + 1).toString().padStart(4, "0")}`,
+      name,
+      type,
+      style,
+      city,
+      tarif,
+      tarifLabel: `à partir de ${tarif} €/soirée`,
+      note,
+      reviewsCount,
+      bio: buildBio(type, name, style, city),
+      instagram: `@${handle}`,
+      mixcloud: type === "dj" ? `mixcloud.com/${handle}` : null,
+      portfolioUrl: type === "dj" ? `mixcloud.com/${handle}` : type === "photographe" ? `behance.net/${handle}` : `vimeo.com/${handle}`,
+      portfolio: buildPortfolio(type, name),
+      availableTonight,
+      status,
+      createdAt,
+    };
+
+    talents.push(talent);
+  }
+
+  return talents.sort((a, b) => b.note - a.note);
+}
+
+// --- Buyers ------------------------------------------------------------------
+
+function createBuyers(count) {
+  const buyers = [];
+
+  for (let i = 0; i < count; i += 1) {
+    const roll = rand();
+    const type = roll < 0.45 ? "club" : roll < 0.75 ? "bar" : "organisateur";
+    const name = type === "club" ? pick(CLUB_NAMES) : type === "bar" ? pick(BAR_NAMES) : pick(ORGA_NAMES);
+    const city = pick(CITIES);
+    const contactFirst = pick(FIRST_NAMES);
+    const contactLast = pick(LAST_NAMES);
+
+    buyers.push({
+      id: `buyer_${(i + 1).toString().padStart(4, "0")}`,
+      name,
+      type,
+      city,
+      contactName: `${contactFirst} ${contactLast}`,
+      email: `contact@${slugify(name)}.com`,
+      phone: `+33 6 ${randomInt(10, 99)} ${randomInt(10, 99)} ${randomInt(10, 99)} ${randomInt(10, 99)}`,
     });
   }
 
-  return events.sort((a, b) => b.createdAt - a.createdAt);
+  return buyers;
 }
 
-export const STATUS_LIST = STATUSES;
+// --- Bookings ----------------------------------------------------------------
 
-export const leads = createLeads(64);
-export const agentEvents = createEvents(leads, 45);
+const TIME_SLOTS = [
+  "20h00 - 00h00", "22h00 - 02h00", "23h00 - 05h00", "00h00 - 04h00", "19h00 - 23h00",
+];
 
-export function addAgentEvent(event) {
-  agentEvents.unshift({
-    id: `evt_${(agentEvents.length + 1).toString().padStart(4, "0")}`,
-    createdAt: Date.now(),
-    ...event,
-  });
+function budgetFor(talent) {
+  const variance = randomInt(-50, 250);
+  return Math.max(100, talent.tarif + variance);
 }
+
+function buildBooking(index, talent, buyer, eventDate, status) {
+  return {
+    id: `booking_${(index + 1).toString().padStart(4, "0")}`,
+    talentId: talent.id,
+    talentName: talent.name,
+    talentType: talent.type,
+    buyerId: buyer.id,
+    buyerName: buyer.name,
+    city: buyer.city,
+    eventDate,
+    timeSlot: pick(TIME_SLOTS),
+    budget: budgetFor(talent),
+    status,
+    notes: pick(NOTES_TEMPLATES),
+    createdAt: eventDate - randomInt(1, 20) * 24 * 60 * 60 * 1000,
+  };
+}
+
+function createBookings(talents, buyers, count) {
+  const bookings = [];
+  const now = Date.now();
+  const dayMs = 24 * 60 * 60 * 1000;
+  const { start: weekendStart, end: weekendEnd } = getWeekendRange(new Date(now));
+
+  const todayStart = new Date(now);
+  todayStart.setHours(0, 0, 0, 0);
+  const todayEnd = new Date(now);
+  todayEnd.setHours(23, 59, 59, 999);
+
+  let index = 0;
+
+  // 1) Urgent replacement alerts happening tonight.
+  const urgentTonightCount = 5;
+  for (let i = 0; i < urgentTonightCount; i += 1) {
+    const talent = pick(talents);
+    const buyer = pick(buyers);
+    const eventDate = randomTimestampBetween(Math.max(now, todayStart.getTime()), todayEnd.getTime());
+    bookings.push(buildBooking(index, talent, buyer, eventDate, "urgence"));
+    index += 1;
+  }
+
+  // 2) Bookings happening this weekend (confirmed or still pending).
+  const weekendCount = 14;
+  for (let i = 0; i < weekendCount; i += 1) {
+    const talent = pick(talents);
+    const buyer = pick(buyers);
+    const eventDate = randomTimestampBetween(weekendStart, weekendEnd);
+    const status = rand() < 0.65 ? "confirme" : "en_attente";
+    bookings.push(buildBooking(index, talent, buyer, eventDate, status));
+    index += 1;
+  }
+
+  // 3) Past bookings, mostly wrapped up (feeds the revenue total).
+  const pastCount = 18;
+  for (let i = 0; i < pastCount; i += 1) {
+    const talent = pick(talents);
+    const buyer = pick(buyers);
+    const eventDate = now - randomInt(1, 45) * dayMs;
+    const status = rand() < 0.85 ? "termine" : "urgence";
+    bookings.push(buildBooking(index, talent, buyer, eventDate, status));
+    index += 1;
+  }
+
+  // 4) Other upcoming requests, spread over the next month.
+  while (bookings.length < count) {
+    const talent = pick(talents);
+    const buyer = pick(buyers);
+    const eventDate = now + randomInt(1, 35) * dayMs;
+    const status = rand() < 0.5 ? "en_attente" : "confirme";
+    bookings.push(buildBooking(index, talent, buyer, eventDate, status));
+    index += 1;
+  }
+
+  return bookings.sort((a, b) => a.eventDate - b.eventDate);
+}
+
+export const talents = createTalents(48);
+export const buyers = createBuyers(20);
+export const bookings = createBookings(talents, buyers, 55);

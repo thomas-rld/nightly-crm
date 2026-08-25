@@ -1,33 +1,54 @@
-import { leads, STATUS_LIST } from "../data/store.js";
-
-function startOfToday() {
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
-  return now.getTime();
-}
+import { talents, bookings, TALENT_TYPES, BOOKING_STATUSES, getWeekendRange, isToday } from "../data/store.js";
 
 export default async function statsRoutes(fastify) {
   fastify.get("/api/stats", async () => {
-    const todayStart = startOfToday();
+    const now = new Date();
+    const { start: weekendStart, end: weekendEnd } = getWeekendRange(now);
 
-    const byStatus = STATUS_LIST.reduce((acc, status) => {
+    const byTalentType = TALENT_TYPES.reduce((acc, type) => {
+      acc[type] = 0;
+      return acc;
+    }, {});
+
+    const byBookingStatus = BOOKING_STATUSES.reduce((acc, status) => {
       acc[status] = 0;
       return acc;
     }, {});
 
-    let todayLeads = 0;
+    let activeTalents = 0;
+    for (const talent of talents) {
+      byTalentType[talent.type] = (byTalentType[talent.type] ?? 0) + 1;
+      if (talent.status === "actif") activeTalents += 1;
+    }
 
-    for (const lead of leads) {
-      byStatus[lead.status] = (byStatus[lead.status] ?? 0) + 1;
-      if (lead.createdAt >= todayStart) {
-        todayLeads += 1;
+    let bookingsThisWeekend = 0;
+    let urgentAlertsTonight = 0;
+    let totalRevenue = 0;
+
+    for (const booking of bookings) {
+      byBookingStatus[booking.status] = (byBookingStatus[booking.status] ?? 0) + 1;
+
+      if (booking.eventDate >= weekendStart && booking.eventDate <= weekendEnd) {
+        bookingsThisWeekend += 1;
+      }
+
+      if (booking.status === "urgence" && isToday(booking.eventDate, now)) {
+        urgentAlertsTonight += 1;
+      }
+
+      if (booking.status === "confirme" || booking.status === "termine") {
+        totalRevenue += booking.budget;
       }
     }
 
     return {
-      totalLeads: leads.length,
-      todayLeads,
-      byStatus,
+      activeTalents,
+      totalTalents: talents.length,
+      bookingsThisWeekend,
+      urgentAlertsTonight,
+      totalRevenue,
+      byTalentType,
+      byBookingStatus,
       updatedAt: Date.now(),
     };
   });

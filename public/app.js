@@ -1,59 +1,74 @@
 (() => {
   "use strict";
 
-  const STATUS_META = {
-    new: { label: "Nouveau", dot: "bg-blue-400", badge: "bg-blue-500/10 text-blue-300 ring-1 ring-inset ring-blue-500/30" },
-    contacted: { label: "Contacté", dot: "bg-amber-400", badge: "bg-amber-500/10 text-amber-300 ring-1 ring-inset ring-amber-500/30" },
-    qualified: { label: "Qualifié", dot: "bg-emerald-400", badge: "bg-emerald-500/10 text-emerald-300 ring-1 ring-inset ring-emerald-500/30" },
-    converted: { label: "Converti", dot: "bg-violet-400", badge: "bg-violet-500/10 text-violet-300 ring-1 ring-inset ring-violet-500/30" },
-    lost: { label: "Perdu", dot: "bg-rose-400", badge: "bg-rose-500/10 text-rose-300 ring-1 ring-inset ring-rose-500/30" },
+  const TYPE_META = {
+    dj: { label: "DJ", icon: "🎧", badge: "bg-fuchsia-500/10 text-fuchsia-300 ring-1 ring-inset ring-fuchsia-500/30" },
+    photographe: { label: "Photographe", icon: "📷", badge: "bg-sky-500/10 text-sky-300 ring-1 ring-inset ring-sky-500/30" },
+    videaste: { label: "Vidéaste", icon: "🎥", badge: "bg-amber-500/10 text-amber-300 ring-1 ring-inset ring-amber-500/30" },
   };
 
-  const EVENT_ICON = {
-    "lead.created": "✚",
-    "lead.enriched": "🔎",
-    "lead.scored": "★",
-    "email.sent": "✉",
-    "lead.qualified": "✔",
-    "meeting.scheduled": "📅",
-    "lead.status_changed": "↻",
+  const BOOKING_STATUS_META = {
+    en_attente: { label: "En attente", dot: "bg-amber-400", badge: "bg-amber-500/10 text-amber-300 ring-1 ring-inset ring-amber-500/30" },
+    confirme: { label: "Confirmé", dot: "bg-emerald-400", badge: "bg-emerald-500/10 text-emerald-300 ring-1 ring-inset ring-emerald-500/30" },
+    urgence: { label: "Urgence", dot: "bg-rose-400", badge: "bg-rose-500/10 text-rose-300 ring-1 ring-inset ring-rose-500/30" },
+    termine: { label: "Terminé", dot: "bg-slate-400", badge: "bg-slate-500/10 text-slate-300 ring-1 ring-inset ring-slate-500/30" },
   };
 
   const state = {
-    status: "all",
+    talentType: "all",
     query: "",
-    leads: [],
-    activeLeadId: null,
+    availableTonight: false,
+    bookingStatus: "all",
+    talents: [],
+    bookings: [],
+    activeTalentId: null,
   };
 
   const el = {
-    statTotal: document.getElementById("stat-total"),
-    statQualified: document.getElementById("stat-qualified"),
-    statNew: document.getElementById("stat-new"),
-    statusFilters: document.getElementById("status-filters"),
+    statActiveTalents: document.getElementById("stat-active-talents"),
+    statWeekendBookings: document.getElementById("stat-weekend-bookings"),
+    statUrgent: document.getElementById("stat-urgent"),
+    statUrgentCard: document.getElementById("stat-card-urgent"),
+    statRevenue: document.getElementById("stat-revenue"),
+
+    typeFilters: document.getElementById("type-filters"),
+    sosToggle: document.getElementById("sos-toggle"),
     searchInput: document.getElementById("search-input"),
-    leadsTbody: document.getElementById("leads-tbody"),
-    leadsCount: document.getElementById("leads-count"),
-    leadsEmpty: document.getElementById("leads-empty"),
-    leadsLoading: document.getElementById("leads-loading"),
-    eventsList: document.getElementById("events-list"),
-    eventsLoading: document.getElementById("events-loading"),
-    eventsCountdown: document.getElementById("events-refresh-countdown"),
+    talentsTbody: document.getElementById("talents-tbody"),
+    talentsCount: document.getElementById("talents-count"),
+    talentsEmpty: document.getElementById("talents-empty"),
+    talentsLoading: document.getElementById("talents-loading"),
+
+    bookingStatusFilters: document.getElementById("booking-status-filters"),
+    bookingsList: document.getElementById("bookings-list"),
+    bookingsLoading: document.getElementById("bookings-loading"),
+    bookingsCountdown: document.getElementById("bookings-refresh-countdown"),
+    refreshBookings: document.getElementById("refresh-bookings"),
+
     refreshAll: document.getElementById("refresh-all"),
-    refreshEvents: document.getElementById("refresh-events"),
     clock: document.getElementById("clock"),
+
     drawer: document.getElementById("drawer"),
     drawerOverlay: document.getElementById("drawer-overlay"),
     drawerClose: document.getElementById("drawer-close"),
+    drawerAvatar: document.getElementById("drawer-avatar"),
     drawerName: document.getElementById("drawer-name"),
-    drawerCompany: document.getElementById("drawer-company"),
+    drawerStyle: document.getElementById("drawer-style"),
     drawerBadges: document.getElementById("drawer-badges"),
-    drawerEmail: document.getElementById("drawer-email"),
-    drawerPhone: document.getElementById("drawer-phone"),
-    drawerSource: document.getElementById("drawer-source"),
-    drawerCreated: document.getElementById("drawer-created"),
-    drawerJson: document.getElementById("drawer-json"),
-    drawerCopy: document.getElementById("drawer-copy"),
+    drawerBio: document.getElementById("drawer-bio"),
+    drawerCity: document.getElementById("drawer-city"),
+    drawerTarif: document.getElementById("drawer-tarif"),
+    drawerInstagram: document.getElementById("drawer-instagram"),
+    drawerPortfolioLabel: document.getElementById("drawer-portfolio-label"),
+    drawerPortfolioUrl: document.getElementById("drawer-portfolio-url"),
+    drawerPortfolio: document.getElementById("drawer-portfolio"),
+
+    proposeBtn: document.getElementById("propose-date-btn"),
+    proposeForm: document.getElementById("propose-date-form"),
+    proposeConfirmation: document.getElementById("propose-date-confirmation"),
+    proposeDateInput: document.getElementById("propose-date-input"),
+    proposeSlotInput: document.getElementById("propose-slot-input"),
+    proposeBudgetInput: document.getElementById("propose-budget-input"),
   };
 
   function escapeHtml(value) {
@@ -67,6 +82,7 @@
 
   function initials(name) {
     return name
+      .replace(/^DJ\s+/i, "")
       .split(" ")
       .filter(Boolean)
       .slice(0, 2)
@@ -74,29 +90,38 @@
       .join("");
   }
 
+  function formatEuro(value) {
+    return `${Math.round(value).toLocaleString("fr-FR")} €`;
+  }
+
   function formatDate(timestamp) {
-    return new Date(timestamp).toLocaleString("fr-FR", {
+    return new Date(timestamp).toLocaleDateString("fr-FR", {
+      weekday: "short",
       day: "2-digit",
       month: "short",
-      hour: "2-digit",
-      minute: "2-digit",
     });
   }
 
-  function formatRelativeTime(timestamp) {
-    const diffMs = Date.now() - timestamp;
-    const diffMin = Math.round(diffMs / 60000);
-    if (diffMin < 1) return "à l'instant";
-    if (diffMin < 60) return `il y a ${diffMin} min`;
-    const diffHours = Math.round(diffMin / 60);
-    if (diffHours < 24) return `il y a ${diffHours} h`;
-    const diffDays = Math.round(diffHours / 24);
-    return `il y a ${diffDays} j`;
+  function starRow(note) {
+    const full = Math.round(note);
+    let stars = "";
+    for (let i = 0; i < 5; i += 1) {
+      stars += i < full ? "★" : "☆";
+    }
+    return stars;
   }
 
-  function statusBadge(status) {
-    const meta = STATUS_META[status] ?? { label: status, badge: "bg-slate-500/10 text-slate-300 ring-1 ring-inset ring-slate-500/30", dot: "bg-slate-400" };
+  function typeBadge(type) {
+    const meta = TYPE_META[type] ?? { label: type, icon: "•", badge: "bg-slate-500/10 text-slate-300 ring-1 ring-inset ring-slate-500/30" };
     return `<span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium ${meta.badge}">
+      <span>${meta.icon}</span>${meta.label}
+    </span>`;
+  }
+
+  function bookingStatusBadge(status) {
+    const meta = BOOKING_STATUS_META[status] ?? { label: status, dot: "bg-slate-400", badge: "bg-slate-500/10 text-slate-300 ring-1 ring-inset ring-slate-500/30" };
+    const pulse = status === "urgence" ? "animate-pulse" : "";
+    return `<span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium ${meta.badge} ${pulse}">
       <span class="w-1.5 h-1.5 rounded-full ${meta.dot}"></span>${meta.label}
     </span>`;
   }
@@ -111,98 +136,143 @@
   async function loadStats() {
     try {
       const data = await fetchJson("/api/stats");
-      el.statTotal.textContent = data.totalLeads.toLocaleString("fr-FR");
-      el.statQualified.textContent = (data.byStatus?.qualified ?? 0).toLocaleString("fr-FR");
-      el.statNew.textContent = data.todayLeads.toLocaleString("fr-FR");
-      renderStatusFilters(data.byStatus, data.totalLeads);
+      el.statActiveTalents.textContent = data.activeTalents.toLocaleString("fr-FR");
+      el.statWeekendBookings.textContent = data.bookingsThisWeekend.toLocaleString("fr-FR");
+      el.statUrgent.textContent = data.urgentAlertsTonight.toLocaleString("fr-FR");
+      el.statRevenue.textContent = formatEuro(data.totalRevenue);
+
+      el.statUrgentCard.classList.toggle("bg-rose-500/10", data.urgentAlertsTonight > 0);
+      el.statUrgentCard.classList.toggle("animate-pulse", data.urgentAlertsTonight > 0);
+
+      renderTypeFilters(data.byTalentType, data.totalTalents);
+      renderBookingStatusFilters(data.byBookingStatus, data.byBookingStatus ? Object.values(data.byBookingStatus).reduce((a, b) => a + b, 0) : 0);
     } catch (err) {
       console.error("Erreur lors du chargement des statistiques", err);
     }
   }
 
-  function renderStatusFilters(byStatus, total) {
+  function renderTypeFilters(byType, total) {
     const filters = [
       { key: "all", label: "Tous", count: total },
-      ...Object.keys(STATUS_META).map((key) => ({ key, label: STATUS_META[key].label, count: byStatus?.[key] ?? 0 })),
+      ...Object.keys(TYPE_META).map((key) => ({ key, label: `${TYPE_META[key].label}s`, count: byType?.[key] ?? 0 })),
     ];
 
-    el.statusFilters.innerHTML = filters
+    el.typeFilters.innerHTML = filters
       .map((f) => {
-        const active = state.status === f.key;
+        const active = state.talentType === f.key;
         const baseClasses = active
           ? "bg-indigo-500/15 text-indigo-300 pill-active"
           : "bg-surface-100 text-slate-400 hover:text-slate-200 hover:bg-surface-200";
-        return `<button data-status="${f.key}" type="button"
-          class="status-pill flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border border-surface-300/60 transition-colors ${baseClasses}">
+        return `<button data-type="${f.key}" type="button"
+          class="type-pill flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border border-surface-300/60 transition-colors ${baseClasses}">
           ${f.label} <span class="opacity-60">${f.count}</span>
         </button>`;
       })
       .join("");
 
-    el.statusFilters.querySelectorAll(".status-pill").forEach((btn) => {
+    el.typeFilters.querySelectorAll(".type-pill").forEach((btn) => {
       btn.addEventListener("click", () => {
-        state.status = btn.dataset.status;
-        loadLeads();
-        renderStatusFilters(byStatus, total);
+        state.talentType = btn.dataset.type;
+        loadTalents();
+        renderTypeFilters(byType, total);
       });
     });
   }
 
-  // ---------- Leads ----------
-  async function loadLeads() {
-    el.leadsLoading.classList.remove("hidden");
-    el.leadsEmpty.classList.add("hidden");
+  function renderBookingStatusFilters(byStatus, total) {
+    const filters = [
+      { key: "all", label: "Tous", count: total },
+      ...Object.keys(BOOKING_STATUS_META).map((key) => ({ key, label: BOOKING_STATUS_META[key].label, count: byStatus?.[key] ?? 0 })),
+    ];
+
+    el.bookingStatusFilters.innerHTML = filters
+      .map((f) => {
+        const active = state.bookingStatus === f.key;
+        const baseClasses = active
+          ? "bg-indigo-500/15 text-indigo-300 pill-active"
+          : "bg-surface-100 text-slate-400 hover:text-slate-200 hover:bg-surface-200";
+        return `<button data-status="${f.key}" type="button"
+          class="booking-status-pill flex-shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium border border-surface-300/60 transition-colors ${baseClasses}">
+          ${f.label} <span class="opacity-60">${f.count}</span>
+        </button>`;
+      })
+      .join("");
+
+    el.bookingStatusFilters.querySelectorAll(".booking-status-pill").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        state.bookingStatus = btn.dataset.status;
+        loadBookings();
+        renderBookingStatusFilters(byStatus, total);
+      });
+    });
+  }
+
+  // ---------- Talents ----------
+  async function loadTalents() {
+    el.talentsLoading.classList.remove("hidden");
+    el.talentsEmpty.classList.add("hidden");
 
     try {
       const params = new URLSearchParams();
-      if (state.status !== "all") params.set("status", state.status);
+      if (state.talentType !== "all") params.set("type", state.talentType);
       if (state.query) params.set("q", state.query);
+      if (state.availableTonight) params.set("availableTonight", "true");
 
-      const data = await fetchJson(`/api/leads?${params.toString()}`);
-      state.leads = data.leads;
-      renderLeads(data.leads);
-      el.leadsCount.textContent = data.total.toLocaleString("fr-FR");
+      const data = await fetchJson(`/api/talents?${params.toString()}`);
+      state.talents = data.talents;
+      renderTalents(data.talents);
+      el.talentsCount.textContent = data.total.toLocaleString("fr-FR");
     } catch (err) {
-      console.error("Erreur lors du chargement des prospects", err);
+      console.error("Erreur lors du chargement des talents", err);
     } finally {
-      el.leadsLoading.classList.add("hidden");
+      el.talentsLoading.classList.add("hidden");
     }
   }
 
-  function renderLeads(leads) {
-    if (!leads.length) {
-      el.leadsTbody.innerHTML = "";
-      el.leadsEmpty.classList.remove("hidden");
+  function renderTalents(talents) {
+    if (!talents.length) {
+      el.talentsTbody.innerHTML = "";
+      el.talentsEmpty.classList.remove("hidden");
       return;
     }
 
-    el.leadsEmpty.classList.add("hidden");
-    el.leadsTbody.innerHTML = leads
-      .map((lead) => {
-        const scoreColor = lead.score >= 75 ? "text-emerald-400" : lead.score >= 45 ? "text-amber-400" : "text-slate-400";
-        return `<tr class="hover:bg-surface-100/60 cursor-pointer transition-colors" data-lead-id="${escapeHtml(lead.id)}">
+    el.talentsEmpty.classList.add("hidden");
+    el.talentsTbody.innerHTML = talents
+      .map((talent) => {
+        const meta = TYPE_META[talent.type] ?? { icon: "•", badge: "bg-slate-500/10 text-slate-300" };
+        const dispoBadge = talent.availableTonight
+          ? `<span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-300 ring-1 ring-inset ring-emerald-500/30">
+              <span class="relative flex h-1.5 w-1.5"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span></span>
+              Oui
+            </span>`
+          : `<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-surface-200 text-slate-500">Non</span>`;
+
+        return `<tr class="hover:bg-surface-100/60 cursor-pointer transition-colors" data-talent-id="${escapeHtml(talent.id)}">
           <td class="px-4 py-3">
             <div class="flex items-center gap-3">
-              <div class="w-8 h-8 rounded-full bg-surface-200 text-slate-300 text-xs font-semibold flex items-center justify-center flex-shrink-0">
-                ${escapeHtml(initials(lead.name))}
+              <div class="w-8 h-8 rounded-full ${meta.badge} flex items-center justify-center flex-shrink-0 text-sm">
+                ${meta.icon}
               </div>
               <div class="min-w-0">
-                <p class="text-sm font-medium text-slate-100 truncate">${escapeHtml(lead.name)}</p>
-                <p class="text-xs text-slate-500 truncate">${escapeHtml(lead.email)}</p>
+                <p class="text-sm font-medium text-slate-100 truncate">${escapeHtml(talent.name)}</p>
+                <p class="text-xs text-slate-500 truncate">${escapeHtml(talent.city)} · ${escapeHtml(meta.label)}</p>
               </div>
             </div>
           </td>
-          <td class="px-4 py-3 text-sm text-slate-300 hidden md:table-cell">${escapeHtml(lead.company)}</td>
-          <td class="px-4 py-3">${statusBadge(lead.status)}</td>
-          <td class="px-4 py-3 text-sm font-semibold hidden sm:table-cell ${scoreColor}">${lead.score}</td>
-          <td class="px-4 py-3 text-sm text-slate-400 hidden lg:table-cell capitalize">${escapeHtml(lead.source)}</td>
-          <td class="px-4 py-3 text-sm text-slate-500 text-right whitespace-nowrap">${formatDate(lead.createdAt)}</td>
+          <td class="px-4 py-3 text-sm text-slate-300 hidden md:table-cell">${escapeHtml(talent.style)}</td>
+          <td class="px-4 py-3 text-sm text-slate-300 hidden lg:table-cell">${escapeHtml(talent.city)}</td>
+          <td class="px-4 py-3 text-sm text-slate-300 hidden sm:table-cell whitespace-nowrap">${formatEuro(talent.tarif)}</td>
+          <td class="px-4 py-3 text-sm whitespace-nowrap">
+            <span class="text-amber-400">${starRow(talent.note)}</span>
+            <span class="text-slate-500 text-xs ml-1">${talent.note.toFixed(1)} (${talent.reviewsCount})</span>
+          </td>
+          <td class="px-4 py-3 text-right">${dispoBadge}</td>
         </tr>`;
       })
       .join("");
 
-    el.leadsTbody.querySelectorAll("tr[data-lead-id]").forEach((row) => {
-      row.addEventListener("click", () => openDrawer(row.dataset.leadId));
+    el.talentsTbody.querySelectorAll("tr[data-talent-id]").forEach((row) => {
+      row.addEventListener("click", () => openDrawer(row.dataset.talentId));
     });
   }
 
@@ -210,24 +280,54 @@
   el.searchInput.addEventListener("input", (e) => {
     state.query = e.target.value.trim();
     clearTimeout(searchDebounce);
-    searchDebounce = setTimeout(loadLeads, 300);
+    searchDebounce = setTimeout(loadTalents, 300);
+  });
+
+  el.sosToggle.addEventListener("click", () => {
+    state.availableTonight = !state.availableTonight;
+    el.sosToggle.classList.toggle("bg-rose-500", state.availableTonight);
+    el.sosToggle.classList.toggle("text-white", state.availableTonight);
+    el.sosToggle.classList.toggle("bg-rose-500/10", !state.availableTonight);
+    el.sosToggle.classList.toggle("text-rose-300", !state.availableTonight);
+    loadTalents();
   });
 
   // ---------- Drawer ----------
-  function openDrawer(leadId) {
-    const lead = state.leads.find((item) => item.id === leadId);
-    if (!lead) return;
+  function openDrawer(talentId) {
+    const talent = state.talents.find((item) => item.id === talentId);
+    if (!talent) return;
 
-    state.activeLeadId = leadId;
-    el.drawerName.textContent = lead.name;
-    el.drawerCompany.textContent = lead.company;
-    el.drawerEmail.textContent = lead.email;
-    el.drawerPhone.textContent = lead.phone;
-    el.drawerSource.textContent = lead.source;
-    el.drawerCreated.textContent = formatDate(lead.createdAt);
-    el.drawerBadges.innerHTML = `${statusBadge(lead.status)}
-      <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-surface-200 text-slate-300">Score IA · ${lead.score}</span>`;
-    el.drawerJson.textContent = JSON.stringify(lead.metadata, null, 2);
+    state.activeTalentId = talentId;
+    const meta = TYPE_META[talent.type] ?? { label: talent.type, icon: "•" };
+
+    el.drawerAvatar.textContent = initials(talent.name);
+    el.drawerName.textContent = talent.name;
+    el.drawerStyle.textContent = `${meta.label} · ${talent.style}`;
+    el.drawerBio.textContent = talent.bio;
+    el.drawerCity.textContent = talent.city;
+    el.drawerTarif.textContent = talent.tarifLabel;
+    el.drawerInstagram.textContent = talent.instagram;
+    el.drawerPortfolioLabel.textContent = talent.type === "dj" ? "Mixcloud" : "Portfolio";
+    el.drawerPortfolioUrl.textContent = talent.portfolioUrl;
+
+    el.drawerBadges.innerHTML = `${typeBadge(talent.type)}
+      <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-surface-200 text-slate-300">
+        <span class="text-amber-400">${starRow(talent.note)}</span> ${talent.note.toFixed(1)} (${talent.reviewsCount})
+      </span>
+      ${talent.availableTonight
+        ? `<span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-300 ring-1 ring-inset ring-emerald-500/30">Dispo ce soir</span>`
+        : `<span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-surface-200 text-slate-500">Non dispo ce soir</span>`}`;
+
+    el.drawerPortfolio.innerHTML = talent.portfolio
+      .map(
+        (item) => `<div class="flex items-center gap-3 bg-surface-50 border border-surface-300/60 rounded-lg p-2.5">
+          <span class="text-lg">${item.cover}</span>
+          <span class="text-sm text-slate-300">${escapeHtml(item.title)}</span>
+        </div>`
+      )
+      .join("");
+
+    resetProposeForm();
 
     el.drawer.classList.remove("translate-x-full");
     el.drawerOverlay.classList.remove("hidden");
@@ -236,7 +336,8 @@
   function closeDrawer() {
     el.drawer.classList.add("translate-x-full");
     el.drawerOverlay.classList.add("hidden");
-    state.activeLeadId = null;
+    state.activeTalentId = null;
+    resetProposeForm();
   }
 
   el.drawerClose.addEventListener("click", closeDrawer);
@@ -245,46 +346,70 @@
     if (e.key === "Escape") closeDrawer();
   });
 
-  el.drawerCopy.addEventListener("click", async () => {
-    try {
-      await navigator.clipboard.writeText(el.drawerJson.textContent);
-      el.drawerCopy.textContent = "Copié !";
-      setTimeout(() => (el.drawerCopy.textContent = "Copier"), 1500);
-    } catch {
-      // Clipboard API unavailable, fail silently.
-    }
+  // ---------- Propose a date (client-side simulation) ----------
+  function resetProposeForm() {
+    el.proposeForm.classList.add("hidden");
+    el.proposeConfirmation.classList.add("hidden");
+    el.proposeBtn.classList.remove("hidden");
+    el.proposeBtn.textContent = "Proposer une date";
+    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    el.proposeDateInput.value = tomorrow.toISOString().slice(0, 10);
+    el.proposeBudgetInput.value = "";
+  }
+
+  el.proposeBtn.addEventListener("click", () => {
+    el.proposeForm.classList.remove("hidden");
+    el.proposeBtn.classList.add("hidden");
   });
 
-  // ---------- Events feed ----------
-  async function loadEvents() {
+  el.proposeForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const talent = state.talents.find((item) => item.id === state.activeTalentId);
+    if (!talent) return;
+
+    const dateLabel = el.proposeDateInput.value
+      ? new Date(`${el.proposeDateInput.value}T00:00:00`).toLocaleDateString("fr-FR", { weekday: "long", day: "2-digit", month: "long" })
+      : "date à confirmer";
+    const slot = el.proposeSlotInput.value;
+    const budget = el.proposeBudgetInput.value ? `${Number(el.proposeBudgetInput.value).toLocaleString("fr-FR")} €` : "budget à préciser";
+
+    el.proposeForm.classList.add("hidden");
+    el.proposeConfirmation.textContent = `Demande envoyée à ${talent.name} pour le ${dateLabel} (${slot}) — budget proposé : ${budget}. (simulation, aucune requête n'est envoyée)`;
+    el.proposeConfirmation.classList.remove("hidden");
+  });
+
+  // ---------- Bookings feed ----------
+  async function loadBookings() {
     try {
-      const data = await fetchJson("/api/events");
-      renderEvents(data.events);
+      const params = new URLSearchParams();
+      if (state.bookingStatus !== "all") params.set("status", state.bookingStatus);
+      const data = await fetchJson(`/api/bookings?${params.toString()}`);
+      state.bookings = data.bookings;
+      renderBookings(data.bookings);
     } catch (err) {
-      console.error("Erreur lors du chargement du flux d'activité", err);
+      console.error("Erreur lors du chargement des demandes de booking", err);
     } finally {
-      el.eventsLoading.classList.add("hidden");
+      el.bookingsLoading.classList.add("hidden");
     }
   }
 
-  function renderEvents(events) {
-    if (!events.length) {
-      el.eventsList.innerHTML = `<p class="text-sm text-slate-500 text-center py-10">Aucun événement récent.</p>`;
+  function renderBookings(bookings) {
+    if (!bookings.length) {
+      el.bookingsList.innerHTML = `<p class="text-sm text-slate-500 text-center py-10">Aucune demande de booking.</p>`;
       return;
     }
 
-    el.eventsList.innerHTML = events
-      .map((event) => {
-        const icon = EVENT_ICON[event.type] ?? "•";
-        return `<div class="px-4 py-3 flex items-start gap-3 hover:bg-surface-100/50 transition-colors">
-          <div class="w-7 h-7 rounded-full bg-surface-200 text-indigo-300 text-xs flex items-center justify-center flex-shrink-0 mt-0.5">${icon}</div>
-          <div class="min-w-0 flex-1">
-            <p class="text-sm text-slate-200 leading-snug">${escapeHtml(event.message)}</p>
-            <div class="flex items-center gap-2 mt-1">
-              <span class="text-[11px] text-slate-500">${formatRelativeTime(event.createdAt)}</span>
-              <span class="text-[11px] text-slate-600">·</span>
-              <span class="text-[11px] text-slate-500 font-mono">${escapeHtml(event.payload?.agent ?? "agent")}</span>
-            </div>
+    el.bookingsList.innerHTML = bookings
+      .map((booking) => {
+        const urgent = booking.status === "urgence";
+        return `<div class="px-4 py-3 hover:bg-surface-100/50 transition-colors ${urgent ? "border-l-2 border-rose-500 bg-rose-500/5" : ""}">
+          <div class="flex items-center justify-between gap-2">
+            <p class="text-sm font-medium text-slate-100 truncate">${escapeHtml(booking.talentName)} <span class="text-slate-500">→</span> ${escapeHtml(booking.buyerName)}</p>
+          </div>
+          <p class="text-xs text-slate-500 mt-1">${escapeHtml(booking.city)} · ${formatDate(booking.eventDate)} · ${escapeHtml(booking.timeSlot)}</p>
+          <div class="flex items-center justify-between mt-2">
+            ${bookingStatusBadge(booking.status)}
+            <span class="text-xs font-semibold text-slate-300">${formatEuro(booking.budget)}</span>
           </div>
         </div>`;
       })
@@ -292,16 +417,17 @@
   }
 
   // ---------- Auto-refresh + clock ----------
-  const EVENTS_REFRESH_INTERVAL = 15;
-  let countdown = EVENTS_REFRESH_INTERVAL;
+  const BOOKINGS_REFRESH_INTERVAL = 20;
+  let countdown = BOOKINGS_REFRESH_INTERVAL;
 
   function tickCountdown() {
     countdown -= 1;
     if (countdown <= 0) {
-      loadEvents();
-      countdown = EVENTS_REFRESH_INTERVAL;
+      loadBookings();
+      loadStats();
+      countdown = BOOKINGS_REFRESH_INTERVAL;
     }
-    el.eventsCountdown.textContent = `${countdown}s`;
+    el.bookingsCountdown.textContent = `${countdown}s`;
   }
 
   function updateClock() {
@@ -310,14 +436,14 @@
 
   el.refreshAll.addEventListener("click", () => {
     loadStats();
-    loadLeads();
-    loadEvents();
-    countdown = EVENTS_REFRESH_INTERVAL;
+    loadTalents();
+    loadBookings();
+    countdown = BOOKINGS_REFRESH_INTERVAL;
   });
 
-  el.refreshEvents.addEventListener("click", () => {
-    loadEvents();
-    countdown = EVENTS_REFRESH_INTERVAL;
+  el.refreshBookings.addEventListener("click", () => {
+    loadBookings();
+    countdown = BOOKINGS_REFRESH_INTERVAL;
   });
 
   function init() {
@@ -326,8 +452,8 @@
     setInterval(tickCountdown, 1000);
 
     loadStats();
-    loadLeads();
-    loadEvents();
+    loadTalents();
+    loadBookings();
   }
 
   init();
