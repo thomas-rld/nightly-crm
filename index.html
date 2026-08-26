@@ -1,0 +1,2278 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#07070a" />
+<meta name="description" content="NIGHTLY — l'infrastructure B2B de la nuit. Feed, missions, roster de talents et pass d'accès, sans commission." />
+<title>NIGHTLY · L'infrastructure B2B de la nuit</title>
+<link rel="icon" href="data:," />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script>
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['"Plus Jakarta Sans"', "system-ui", "-apple-system", "sans-serif"],
+          display: ["Syne", '"Plus Jakarta Sans"', "sans-serif"],
+          mono: ['"JetBrains Mono"', "ui-monospace", "SFMono-Regular", "monospace"],
+        },
+        colors: {
+          ink: "#07070a",
+          mineral: "#0a0a0d",
+          "neon-cyan": "#2de2f2",
+        },
+      },
+    },
+  };
+</script>
+<style>
+  html { color-scheme: dark; -webkit-tap-highlight-color: transparent; }
+  body {
+    background-color: #07070a;
+    background-image:
+      radial-gradient(900px 520px at 12% -8%, rgba(45,226,242,0.07), transparent 60%),
+      radial-gradient(760px 460px at 92% 4%, rgba(120,90,255,0.06), transparent 62%);
+    background-attachment: fixed;
+  }
+  ::selection { background: rgba(45,226,242,0.24); color: #fff; }
+
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+
+  .n-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+  .n-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 99px; }
+  .n-scroll::-webkit-scrollbar-track { background: transparent; }
+
+  /* Champs de formulaire — Plus Jakarta Sans uniquement */
+  .n-field {
+    width: 100%;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 0.75rem;
+    padding: 0.625rem 0.875rem;
+    font-size: 0.8125rem;
+    font-family: inherit;
+    color: #fff;
+    outline: none;
+    transition: border-color 0.2s ease, background 0.2s ease;
+  }
+  .n-field:focus { border-color: rgba(255,255,255,0.28); background: rgba(255,255,255,0.055); }
+  .n-field::placeholder { color: rgba(255,255,255,0.28); }
+  select.n-field { appearance: none; -webkit-appearance: none; padding-right: 2.25rem; }
+  textarea.n-field { resize: vertical; min-height: 92px; line-height: 1.55; }
+  .n-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.38);
+    margin-bottom: 0.4rem;
+  }
+
+  /* Overlays : modales + drawer */
+  .n-overlay { opacity: 0; visibility: hidden; transition: opacity 0.28s ease, visibility 0.28s ease; }
+  .n-overlay.is-open { opacity: 1; visibility: visible; }
+  .n-overlay .n-panel { transform: translateY(14px) scale(0.985); opacity: 0; transition: transform 0.34s cubic-bezier(0.22,1,0.36,1), opacity 0.28s ease; }
+  .n-overlay.is-open .n-panel { transform: translateY(0) scale(1); opacity: 1; }
+  .n-overlay .n-drawer { transform: translateX(102%); transition: transform 0.4s cubic-bezier(0.22,1,0.36,1); }
+  .n-overlay.is-open .n-drawer { transform: translateX(0); }
+  @media (max-width: 639px) {
+    .n-overlay .n-drawer { transform: translateY(102%); }
+    .n-overlay.is-open .n-drawer { transform: translateY(0); }
+  }
+
+  @keyframes nRise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .n-rise { animation: nRise 0.45s cubic-bezier(0.22,1,0.36,1) both; }
+
+  @keyframes nPulseSoft { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+  .animate-pulse-soft { animation: nPulseSoft 2.4s ease-in-out infinite; }
+
+  @keyframes nToast { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .n-toast { animation: nToast 0.3s cubic-bezier(0.22,1,0.36,1) both; }
+
+  input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.4; cursor: pointer; }
+  [data-lucide] { stroke-width: 1.6; }
+</style>
+</head>
+<body class="min-h-screen bg-ink font-sans text-white antialiased">
+
+<!-- ══════════════════════════════════════════════════════════════
+     HEADER
+     ══════════════════════════════════════════════════════════ -->
+<header class="sticky top-0 z-40 border-b border-white/[0.06] bg-ink/85 backdrop-blur-xl">
+  <div class="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4 sm:px-6">
+    <button type="button" data-tab="feed" class="group flex items-center gap-2.5">
+      <span class="relative flex h-2 w-2 items-center justify-center">
+        <span class="absolute inline-flex h-2 w-2 rounded-full bg-neon-cyan/40 animate-pulse-soft"></span>
+        <span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-neon-cyan"></span>
+      </span>
+      <span class="text-[13px] font-extrabold tracking-[0.34em] text-white">NIGHTLY</span>
+    </button>
+
+    <nav class="ml-auto hidden items-center gap-1 md:flex" aria-label="Navigation principale">
+      <button type="button" data-tab="feed" class="nav-desktop rounded-full px-3.5 py-1.5 text-xs font-medium transition">Feed</button>
+      <button type="button" data-tab="annonces" class="nav-desktop rounded-full px-3.5 py-1.5 text-xs font-medium transition">Annonces</button>
+      <button type="button" data-tab="talents" class="nav-desktop rounded-full px-3.5 py-1.5 text-xs font-medium transition">Talents</button>
+      <button type="button" data-tab="pass" class="nav-desktop rounded-full px-3.5 py-1.5 text-xs font-medium transition">Pass</button>
+    </nav>
+
+    <div class="ml-auto flex items-center gap-2 md:ml-3">
+      <button type="button" id="header-identity" class="flex items-center gap-2.5 rounded-full border border-white/10 bg-white/[0.03] py-1 pl-1 pr-3 transition hover:border-white/20">
+        <span id="header-avatar" class="grid h-7 w-7 place-items-center rounded-full bg-white/10 text-[11px] font-bold text-white/80">NG</span>
+        <span class="hidden text-left sm:block">
+          <span id="header-name" class="block text-[11px] font-semibold leading-tight text-white">Créer un profil</span>
+          <span id="header-role" class="block text-[10px] leading-tight text-white/40">Non connecté</span>
+        </span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════════════════════════════
+     MAIN
+     ══════════════════════════════════════════════════════════ -->
+<main class="mx-auto max-w-6xl px-4 pb-32 pt-6 sm:px-6 sm:pt-8 md:pb-16">
+
+  <!-- ───────────────────────── FEED ───────────────────────── -->
+  <section id="feed-section" class="tab-panel" data-panel="feed">
+    <div class="flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <h2 class="font-display text-2xl font-bold tracking-tight text-white sm:text-3xl">Feed</h2>
+        <p class="mt-1 text-xs text-white/40">Le fil des pros de la nuit — sets, coulisses, opportunités.</p>
+      </div>
+      <p class="text-[11px] font-medium text-white/35"><span id="feed-count" class="font-mono text-white/60">0</span> publications</p>
+    </div>
+
+    <div class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_296px]">
+      <div>
+        <!-- Composer -->
+        <div class="rounded-2xl border border-white/[0.08] bg-mineral p-4">
+          <div class="flex gap-3">
+            <span id="composer-avatar" class="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/10 text-[11px] font-bold text-white/80">NG</span>
+            <div class="min-w-0 flex-1">
+              <textarea id="post-input" rows="2" class="n-field border-transparent bg-transparent px-0 py-1 text-sm focus:border-transparent focus:bg-transparent" placeholder="Partagez une actu, un besoin, une dispo de dernière minute…"></textarea>
+              <div id="post-media-preview" class="hidden relative mt-3 overflow-hidden rounded-xl border border-white/[0.08]">
+                <img id="post-media-img" alt="Aperçu du média" class="max-h-72 w-full object-cover" />
+                <button type="button" id="post-media-remove" class="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full border border-white/15 bg-black/70 text-white/70 backdrop-blur-md transition hover:text-white" aria-label="Retirer le média">
+                  <i data-lucide="x" class="h-3.5 w-3.5"></i>
+                </button>
+              </div>
+              <div class="mt-3 flex items-center justify-between gap-3 border-t border-white/[0.06] pt-3">
+                <label class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/10 px-3 py-1.5 text-[11px] font-medium text-white/55 transition hover:border-white/25 hover:text-white/85">
+                  <i data-lucide="image-plus" class="h-3.5 w-3.5"></i>
+                  Média
+                  <input id="post-media-input" type="file" accept="image/*" class="hidden" />
+                </label>
+                <button type="button" id="post-submit" class="rounded-xl bg-white px-4 py-2 text-xs font-bold text-black transition hover:scale-105 active:scale-100 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:scale-100">Publier</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="feed-list" class="mt-5 space-y-4"></div>
+      </div>
+
+      <!-- Colonne latérale -->
+      <aside class="hidden lg:block">
+        <div class="sticky top-24 space-y-4">
+          <div class="rounded-2xl border border-white/[0.08] bg-mineral p-4">
+            <p class="text-[10px] font-bold uppercase tracking-[0.14em] text-white/35">Réseau</p>
+            <dl class="mt-3 space-y-2.5">
+              <div class="flex items-baseline justify-between gap-3">
+                <dt class="text-xs text-white/55">Talents vérifiés</dt>
+                <dd id="side-talents" class="font-mono text-sm text-white">0</dd>
+              </div>
+              <div class="flex items-baseline justify-between gap-3">
+                <dt class="text-xs text-white/55">Missions ouvertes</dt>
+                <dd id="side-missions" class="font-mono text-sm text-white">0</dd>
+              </div>
+              <div class="flex items-baseline justify-between gap-3">
+                <dt class="text-xs text-white/55">Commission</dt>
+                <dd class="font-mono text-sm text-neon-cyan">0 %</dd>
+              </div>
+            </dl>
+          </div>
+          <div class="rounded-2xl border border-white/[0.08] bg-mineral p-4">
+            <p class="text-[10px] font-bold uppercase tracking-[0.14em] text-white/35">Disponibles ce soir</p>
+            <ul id="side-available" class="mt-3 space-y-3"></ul>
+            <button type="button" data-tab="talents" class="mt-4 w-full rounded-xl border border-white/10 py-2 text-[11px] font-semibold text-white/70 transition hover:border-white/25 hover:text-white">Voir le roster</button>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ─────────────────────── ANNONCES ─────────────────────── -->
+  <section id="annonces-section" class="tab-panel hidden" data-panel="annonces">
+    <div class="flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <h2 class="font-display text-2xl font-bold tracking-tight text-white sm:text-3xl">Annonces</h2>
+        <p class="mt-1 text-xs text-white/40"><span id="mission-count" class="font-mono text-white/60">0</span> missions ouvertes · cachet net garanti</p>
+      </div>
+      <button type="button" id="mission-new" class="rounded-xl bg-white px-4 py-2 text-xs font-bold text-black transition hover:scale-105 active:scale-100">Déposer une mission</button>
+    </div>
+
+    <div id="mission-filters" class="mt-5 flex gap-2 overflow-x-auto no-scrollbar pb-1"></div>
+
+    <div id="mission-list" class="mt-5 grid gap-4 md:grid-cols-2"></div>
+    <p id="mission-empty" class="hidden rounded-2xl border border-dashed border-white/10 py-14 text-center text-xs text-white/40">Aucune mission sur ce filtre.</p>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════
+       TALENTS · DÉBUT DU BLOC REMPLAÇABLE
+       Bloc autonome : aucune dépendance vers le Feed, les Annonces
+       ou le Pass. Remplaçable d'un seul tenant jusqu'au marqueur
+       « TALENTS · FIN DU BLOC REMPLAÇABLE ».
+       ══════════════════════════════════════════════════════════ -->
+  <section id="talents-section" class="tab-panel hidden" data-panel="talents">
+    <!-- En-tête de section épuré -->
+    <div class="flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <h2 class="font-display text-2xl font-bold tracking-tight text-white sm:text-3xl">Talents</h2>
+        <p class="mt-1 text-xs text-white/40"><span id="talent-count" class="font-mono text-white/60">0</span> profils vérifiés · cachet net, 0 % de commission</p>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <label class="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1.5 transition focus-within:border-white/25">
+          <i data-lucide="search" class="h-3.5 w-3.5 shrink-0 text-white/35"></i>
+          <input id="talent-search" type="search" autocomplete="off" placeholder="Nom, style, matériel" class="w-40 bg-transparent text-xs text-white outline-none placeholder:text-white/30 sm:w-52" />
+        </label>
+        <div class="relative">
+          <select id="talent-city" class="n-field rounded-full border-white/10 py-1.5 pl-3.5 text-xs text-white/70" aria-label="Filtrer par ville">
+            <option value="all">Toutes les villes</option>
+          </select>
+          <i data-lucide="chevron-down" class="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/35"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Capsules de filtres en texte pur -->
+    <div id="talent-filters" class="mt-5 flex gap-2 overflow-x-auto no-scrollbar pb-1" role="tablist" aria-label="Filtrer par métier"></div>
+
+    <!-- Roster -->
+    <div id="talents-grid" class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"></div>
+    <p id="talents-empty" class="hidden rounded-2xl border border-dashed border-white/10 py-14 text-center text-xs text-white/40">Aucun talent ne correspond à cette recherche.</p>
+  </section>
+  <!-- ═══════════ TALENTS · FIN DU BLOC REMPLAÇABLE ═══════════ -->
+
+  <!-- ────────────────────────── PASS ──────────────────────── -->
+  <section id="pass-section" class="tab-panel hidden" data-panel="pass">
+    <div class="flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <h2 class="font-display text-2xl font-bold tracking-tight text-white sm:text-3xl">Pass</h2>
+        <p class="mt-1 text-xs text-white/40">Votre accès pro, à présenter à l'entrée des lieux partenaires.</p>
+      </div>
+    </div>
+
+    <div class="mt-6 grid gap-5 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
+      <!-- Carte Pass -->
+      <div id="pass-card" class="overflow-hidden rounded-2xl border border-white/[0.08] bg-mineral">
+        <div class="flex items-center justify-between border-b border-white/[0.06] px-5 py-4">
+          <span class="text-[10px] font-extrabold tracking-[0.28em] text-white/70">NIGHTLY</span>
+          <span id="pass-tier" class="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-white/60">Membre</span>
+        </div>
+        <div class="px-5 py-6">
+          <div class="mx-auto w-fit rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4">
+            <canvas id="pass-qr" width="240" height="240" class="h-[184px] w-[184px]" aria-label="QR code du pass"></canvas>
+          </div>
+          <p id="pass-code" class="mt-5 text-center font-mono text-sm tracking-[0.18em] text-white/85">NGH-0000-0000</p>
+          <p id="pass-holder" class="mt-4 text-center font-display text-lg font-bold text-white">Profil à compléter</p>
+          <p id="pass-meta" class="mt-1 text-center text-xs text-white/45">Créez votre profil pour activer le pass</p>
+        </div>
+        <div class="grid grid-cols-3 divide-x divide-white/[0.06] border-t border-white/[0.06] text-center">
+          <div class="px-2 py-3">
+            <p class="text-[10px] uppercase tracking-[0.08em] text-white/35">Statut</p>
+            <p id="pass-status" class="mt-1 text-[11px] font-semibold text-white/70">Inactif</p>
+          </div>
+          <div class="px-2 py-3">
+            <p class="text-[10px] uppercase tracking-[0.08em] text-white/35">Valide</p>
+            <p id="pass-valid" class="mt-1 font-mono text-[11px] text-white/70">—</p>
+          </div>
+          <div class="px-2 py-3">
+            <p class="text-[10px] uppercase tracking-[0.08em] text-white/35">Depuis</p>
+            <p id="pass-since" class="mt-1 font-mono text-[11px] text-white/70">—</p>
+          </div>
+        </div>
+        <div class="flex gap-2 border-t border-white/[0.06] p-4">
+          <button type="button" id="pass-regen" class="flex-1 rounded-xl border border-white/10 py-2 text-[11px] font-semibold text-white/70 transition hover:border-white/25 hover:text-white">Régénérer le code</button>
+          <button type="button" id="pass-edit" class="flex-1 rounded-xl bg-white py-2 text-[11px] font-bold text-black transition hover:scale-[1.03] active:scale-100">Mon profil</button>
+        </div>
+      </div>
+
+      <!-- Demandes de booking -->
+      <div class="rounded-2xl border border-white/[0.08] bg-mineral p-5">
+        <div class="flex items-center justify-between gap-3">
+          <p class="text-[10px] font-bold uppercase tracking-[0.14em] text-white/35">Mes demandes de booking</p>
+          <span id="booking-count" class="font-mono text-xs text-white/50">0</span>
+        </div>
+        <div id="booking-list" class="mt-4 space-y-3"></div>
+        <p id="booking-empty" class="rounded-xl border border-dashed border-white/10 py-12 text-center text-xs text-white/40">Aucune demande envoyée. Ouvrez le roster pour booker un talent.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ══════════════════════════════════════════════════════════════
+     NAV MOBILE
+     ══════════════════════════════════════════════════════════ -->
+<nav class="fixed bottom-0 left-0 right-0 z-40 border-t border-white/[0.07] bg-ink/90 backdrop-blur-xl md:hidden" aria-label="Navigation mobile">
+  <div class="mx-auto grid max-w-md grid-cols-4 px-2 pb-[env(safe-area-inset-bottom)]">
+    <button type="button" data-tab="feed" class="nav-mobile flex flex-col items-center gap-1 py-3 transition">
+      <i data-lucide="layout-list" class="h-[18px] w-[18px]"></i><span class="text-[10px] font-semibold">Feed</span>
+    </button>
+    <button type="button" data-tab="annonces" class="nav-mobile flex flex-col items-center gap-1 py-3 transition">
+      <i data-lucide="briefcase" class="h-[18px] w-[18px]"></i><span class="text-[10px] font-semibold">Annonces</span>
+    </button>
+    <button type="button" data-tab="talents" class="nav-mobile flex flex-col items-center gap-1 py-3 transition">
+      <i data-lucide="users-round" class="h-[18px] w-[18px]"></i><span class="text-[10px] font-semibold">Talents</span>
+    </button>
+    <button type="button" data-tab="pass" class="nav-mobile flex flex-col items-center gap-1 py-3 transition">
+      <i data-lucide="qr-code" class="h-[18px] w-[18px]"></i><span class="text-[10px] font-semibold">Pass</span>
+    </button>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════════════════════════════
+     FICHE TALENT / RIDER B2B
+     ══════════════════════════════════════════════════════════ -->
+<div id="talent-sheet" class="n-overlay fixed inset-0 z-[60]" role="dialog" aria-modal="true" aria-labelledby="sheet-name">
+  <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" data-close></div>
+  <div class="absolute inset-0 flex items-end justify-center p-0 sm:items-center sm:p-6">
+    <div class="n-panel n-scroll relative max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-t-3xl border border-white/[0.08] bg-mineral sm:rounded-2xl">
+      <button type="button" class="absolute right-4 top-4 z-10 grid h-9 w-9 place-items-center rounded-full border border-white/10 bg-black/60 text-white/70 backdrop-blur-md transition hover:text-white" data-close aria-label="Fermer">
+        <i data-lucide="x" class="h-4 w-4"></i>
+      </button>
+      <div id="talent-sheet-body"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     BOOKING DRAWER
+     ══════════════════════════════════════════════════════════ -->
+<div id="booking-drawer" class="n-overlay fixed inset-0 z-[70]" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+  <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" data-close></div>
+  <div class="absolute inset-0 flex items-end justify-end sm:items-stretch">
+    <div class="n-drawer n-scroll flex max-h-[94vh] w-full flex-col overflow-y-auto rounded-t-3xl border border-white/[0.08] bg-mineral sm:h-full sm:max-h-none sm:w-[420px] sm:rounded-none sm:border-y-0 sm:border-r-0">
+      <div class="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-white/[0.06] bg-mineral/95 px-5 py-4 backdrop-blur-xl">
+        <div>
+          <p class="text-[10px] font-bold uppercase tracking-[0.14em] text-white/35">Demande de booking</p>
+          <p id="drawer-title" class="mt-1 font-display text-lg font-bold leading-tight text-white">Talent</p>
+          <p id="drawer-subtitle" class="mt-0.5 text-xs text-white/45">—</p>
+        </div>
+        <button type="button" class="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-white/10 text-white/60 transition hover:text-white" data-close aria-label="Fermer">
+          <i data-lucide="x" class="h-4 w-4"></i>
+        </button>
+      </div>
+
+      <form id="booking-form" class="flex flex-1 flex-col">
+        <div class="space-y-4 px-5 py-5">
+          <div class="rounded-xl border border-white/[0.08] bg-white/[0.02] p-3.5">
+            <div class="flex items-center justify-between gap-3">
+              <span class="text-[11px] text-white/45">Cachet net garanti</span>
+              <span id="drawer-rate" class="font-mono text-sm font-semibold text-white">—</span>
+            </div>
+            <div class="mt-2 flex items-center justify-between gap-3">
+              <span class="text-[11px] text-white/45">Commission NIGHTLY</span>
+              <span class="font-mono text-sm text-neon-cyan">0 %</span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="n-label" for="booking-date">Date</label>
+              <input id="booking-date" name="date" type="date" required class="n-field" />
+            </div>
+            <div>
+              <label class="n-label" for="booking-time">Heure</label>
+              <input id="booking-time" name="time" type="time" required class="n-field" value="23:00" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="n-label" for="booking-city">Ville</label>
+              <input id="booking-city" name="city" type="text" required class="n-field" placeholder="Paris" />
+            </div>
+            <div>
+              <label class="n-label" for="booking-duration">Durée</label>
+              <select id="booking-duration" name="duration" class="n-field">
+                <option value="1 h">1 h</option>
+                <option value="2 h">2 h</option>
+                <option value="3 h" selected>3 h</option>
+                <option value="4 h">4 h</option>
+                <option value="Soirée complète">Soirée complète</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="n-label" for="booking-venue">Lieu / structure</label>
+            <input id="booking-venue" name="venue" type="text" required class="n-field" placeholder="Nom du club, bar ou collectif" />
+          </div>
+
+          <div>
+            <label class="n-label" for="booking-fee">Cachet net proposé (€)</label>
+            <input id="booking-fee" name="fee" type="number" min="0" step="10" required class="n-field font-mono" />
+            <p id="booking-fee-hint" class="mt-1.5 text-[11px] text-white/35">Tarif de référence du talent pré-rempli.</p>
+          </div>
+
+          <div>
+            <label class="n-label" for="booking-message">Message</label>
+            <textarea id="booking-message" name="message" class="n-field" rows="4"></textarea>
+          </div>
+        </div>
+
+        <div class="sticky bottom-0 mt-auto border-t border-white/[0.06] bg-mineral/95 px-5 py-4 backdrop-blur-xl">
+          <button type="submit" class="w-full rounded-xl bg-white py-3 text-xs font-bold text-black transition hover:scale-[1.02] active:scale-100">Envoyer la demande</button>
+          <p class="mt-2 text-center text-[11px] text-white/30">Le talent reçoit votre demande et répond sous 24 h.</p>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     MISSION : DÉPÔT + FICHE
+     ══════════════════════════════════════════════════════════ -->
+<div id="mission-modal" class="n-overlay fixed inset-0 z-[60]" role="dialog" aria-modal="true" aria-labelledby="mission-modal-title">
+  <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" data-close></div>
+  <div class="absolute inset-0 flex items-end justify-center p-0 sm:items-center sm:p-6">
+    <div class="n-panel n-scroll max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl border border-white/[0.08] bg-mineral sm:rounded-2xl">
+      <div class="sticky top-0 flex items-center justify-between gap-3 border-b border-white/[0.06] bg-mineral/95 px-5 py-4 backdrop-blur-xl">
+        <p id="mission-modal-title" class="text-sm font-bold text-white">Déposer une mission</p>
+        <button type="button" class="grid h-8 w-8 place-items-center rounded-full border border-white/10 text-white/60 transition hover:text-white" data-close aria-label="Fermer">
+          <i data-lucide="x" class="h-4 w-4"></i>
+        </button>
+      </div>
+      <form id="mission-form" class="space-y-4 px-5 py-5">
+        <div>
+          <label class="n-label" for="mission-title">Intitulé</label>
+          <input id="mission-title" name="title" required class="n-field" placeholder="DJ closing samedi · house / techno" />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="n-label" for="mission-discipline">Métier</label>
+            <select id="mission-discipline" name="discipline" class="n-field">
+              <option value="dj">DJ</option>
+              <option value="photo">Photo</option>
+              <option value="video">Vidéo</option>
+              <option value="light">Scéno &amp; Light</option>
+            </select>
+          </div>
+          <div>
+            <label class="n-label" for="mission-city">Ville</label>
+            <input id="mission-city" name="city" required class="n-field" placeholder="Paris" />
+          </div>
+        </div>
+        <div>
+          <label class="n-label" for="mission-venue">Lieu / structure</label>
+          <input id="mission-venue" name="venue" required class="n-field" placeholder="Le Rex Club" />
+        </div>
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="n-label" for="mission-date">Date</label>
+            <input id="mission-date" name="date" type="date" required class="n-field" />
+          </div>
+          <div>
+            <label class="n-label" for="mission-time">Heure</label>
+            <input id="mission-time" name="time" type="time" class="n-field" value="23:00" />
+          </div>
+          <div>
+            <label class="n-label" for="mission-budget">Cachet net (€)</label>
+            <input id="mission-budget" name="budget" type="number" min="0" step="10" required class="n-field font-mono" placeholder="400" />
+          </div>
+        </div>
+        <div>
+          <label class="n-label" for="mission-desc">Brief</label>
+          <textarea id="mission-desc" name="description" class="n-field" rows="4" placeholder="Contexte, jauge, matériel disponible, style attendu…"></textarea>
+        </div>
+        <label class="flex cursor-pointer items-center gap-2.5 rounded-xl border border-white/[0.08] bg-white/[0.02] px-3.5 py-3">
+          <input id="mission-urgent" name="urgent" type="checkbox" class="h-4 w-4 shrink-0 rounded border-white/20 bg-transparent accent-white" />
+          <span class="text-xs text-white/70">Mission urgente <span class="text-white/35">— mise en avant dans le fil</span></span>
+        </label>
+        <button type="submit" class="w-full rounded-xl bg-white py-3 text-xs font-bold text-black transition hover:scale-[1.02] active:scale-100">Publier la mission</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div id="mission-sheet" class="n-overlay fixed inset-0 z-[60]" role="dialog" aria-modal="true">
+  <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" data-close></div>
+  <div class="absolute inset-0 flex items-end justify-center p-0 sm:items-center sm:p-6">
+    <div class="n-panel n-scroll relative max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl border border-white/[0.08] bg-mineral sm:rounded-2xl">
+      <button type="button" class="absolute right-4 top-4 z-10 grid h-8 w-8 place-items-center rounded-full border border-white/10 bg-black/50 text-white/60 backdrop-blur-md transition hover:text-white" data-close aria-label="Fermer">
+        <i data-lucide="x" class="h-4 w-4"></i>
+      </button>
+      <div id="mission-sheet-body"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     ONBOARDING
+     ══════════════════════════════════════════════════════════ -->
+<div id="onboarding" class="n-overlay fixed inset-0 z-[80]" role="dialog" aria-modal="true" aria-labelledby="onb-title">
+  <div class="absolute inset-0 bg-ink/95 backdrop-blur-md"></div>
+  <div class="absolute inset-0 flex items-center justify-center p-4">
+    <div class="n-panel n-scroll max-h-[94vh] w-full max-w-md overflow-y-auto rounded-2xl border border-white/[0.08] bg-mineral">
+      <div class="border-b border-white/[0.06] px-6 py-5">
+        <div class="flex items-center justify-between gap-3">
+          <span class="text-[11px] font-extrabold tracking-[0.3em] text-white/70">NIGHTLY</span>
+          <span id="onb-step-label" class="font-mono text-[11px] text-white/40">1 / 3</span>
+        </div>
+        <div class="mt-3 h-[3px] w-full overflow-hidden rounded-full bg-white/[0.07]">
+          <div id="onb-progress" class="h-full rounded-full bg-white transition-all duration-500" style="width:33%"></div>
+        </div>
+      </div>
+
+      <div class="px-6 py-6">
+        <!-- Étape 1 -->
+        <div class="onb-step" data-step="1">
+          <h3 id="onb-title" class="font-display text-2xl font-bold leading-tight text-white">Bienvenue dans la nuit</h3>
+          <p class="mt-2 text-xs leading-relaxed text-white/45">NIGHTLY connecte les lieux et les talents de la nuit. Cachet net garanti, zéro commission. Qui êtes-vous ?</p>
+          <div class="mt-5 space-y-3">
+            <button type="button" class="onb-role group w-full rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 text-left transition hover:border-white/25" data-role="talent">
+              <span class="flex items-center justify-between gap-3">
+                <span>
+                  <span class="block text-sm font-bold text-white">Je suis un talent</span>
+                  <span class="mt-0.5 block text-[11px] text-white/45">DJ, photo, vidéo, scéno &amp; light</span>
+                </span>
+                <i data-lucide="arrow-right" class="h-4 w-4 shrink-0 text-white/30 transition group-hover:text-white"></i>
+              </span>
+            </button>
+            <button type="button" class="onb-role group w-full rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 text-left transition hover:border-white/25" data-role="organisateur">
+              <span class="flex items-center justify-between gap-3">
+                <span>
+                  <span class="block text-sm font-bold text-white">Je programme des soirées</span>
+                  <span class="mt-0.5 block text-[11px] text-white/45">Club, bar, festival, collectif</span>
+                </span>
+                <i data-lucide="arrow-right" class="h-4 w-4 shrink-0 text-white/30 transition group-hover:text-white"></i>
+              </span>
+            </button>
+          </div>
+          <button type="button" id="onb-skip" class="mt-5 w-full text-center text-[11px] font-medium text-white/35 transition hover:text-white/60">Explorer sans créer de profil</button>
+        </div>
+
+        <!-- Étape 2 -->
+        <div class="onb-step hidden" data-step="2">
+          <h3 class="font-display text-2xl font-bold leading-tight text-white">Votre identité</h3>
+          <p class="mt-2 text-xs leading-relaxed text-white/45">Le nom qui apparaîtra sur le roster, le feed et votre pass.</p>
+          <div class="mt-5 space-y-4">
+            <div>
+              <label class="n-label" for="onb-name"><span id="onb-name-label">Nom de scène</span></label>
+              <input id="onb-name" class="n-field" placeholder="Léa Moreau" autocomplete="name" />
+            </div>
+            <div>
+              <label class="n-label" for="onb-city">Ville d'attache</label>
+              <select id="onb-city" class="n-field"></select>
+            </div>
+          </div>
+          <div class="mt-6 flex gap-2">
+            <button type="button" class="onb-back rounded-xl border border-white/10 px-4 py-2.5 text-xs font-semibold text-white/60 transition hover:text-white">Retour</button>
+            <button type="button" class="onb-next flex-1 rounded-xl bg-white py-2.5 text-xs font-bold text-black transition hover:scale-[1.02] active:scale-100">Continuer</button>
+          </div>
+        </div>
+
+        <!-- Étape 3 -->
+        <div class="onb-step hidden" data-step="3">
+          <h3 class="font-display text-2xl font-bold leading-tight text-white"><span id="onb-step3-title">Votre offre</span></h3>
+          <p class="mt-2 text-xs leading-relaxed text-white/45" id="onb-step3-sub">Ces informations alimentent votre carte dans le roster.</p>
+
+          <div id="onb-talent-fields" class="mt-5 space-y-4">
+            <div>
+              <label class="n-label" for="onb-discipline">Métier</label>
+              <select id="onb-discipline" class="n-field">
+                <option value="dj">DJ</option>
+                <option value="photo">Photo</option>
+                <option value="video">Vidéo</option>
+                <option value="light">Scéno &amp; Light</option>
+              </select>
+            </div>
+            <div>
+              <label class="n-label" for="onb-specialty">Spécialité</label>
+              <input id="onb-specialty" class="n-field" placeholder="Melodic Techno &amp; Peak Time" />
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="n-label" for="onb-rate">Tarif net (€)</label>
+                <input id="onb-rate" type="number" min="0" step="10" class="n-field font-mono" placeholder="350" />
+              </div>
+              <div>
+                <label class="n-label" for="onb-unit">Unité</label>
+                <select id="onb-unit" class="n-field">
+                  <option value="set">/ set</option>
+                  <option value="h">/ h</option>
+                  <option value="shoot">/ shoot</option>
+                  <option value="show">/ show</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label class="n-label" for="onb-gear">Matériel / setup</label>
+              <input id="onb-gear" class="n-field" placeholder="Pioneer CDJ-3000, Xone:96" />
+              <p class="mt-1.5 text-[11px] text-white/30">Séparez par des virgules.</p>
+            </div>
+          </div>
+
+          <div id="onb-orga-fields" class="mt-5 hidden space-y-4">
+            <div>
+              <label class="n-label" for="onb-structure">Structure</label>
+              <input id="onb-structure" class="n-field" placeholder="Le Rex Club" />
+            </div>
+            <div>
+              <label class="n-label" for="onb-orga-type">Type de lieu</label>
+              <select id="onb-orga-type" class="n-field">
+                <option value="Club">Club</option>
+                <option value="Bar">Bar</option>
+                <option value="Festival">Festival</option>
+                <option value="Collectif">Collectif</option>
+              </select>
+            </div>
+            <div>
+              <label class="n-label" for="onb-capacity">Jauge</label>
+              <input id="onb-capacity" type="number" min="0" step="10" class="n-field font-mono" placeholder="600" />
+            </div>
+          </div>
+
+          <div class="mt-6 flex gap-2">
+            <button type="button" class="onb-back rounded-xl border border-white/10 px-4 py-2.5 text-xs font-semibold text-white/60 transition hover:text-white">Retour</button>
+            <button type="button" id="onb-finish" class="flex-1 rounded-xl bg-white py-2.5 text-xs font-bold text-black transition hover:scale-[1.02] active:scale-100">Activer mon profil</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     ÉDITION DU PROFIL TALENT
+     ══════════════════════════════════════════════════════════ -->
+<div id="profile-modal" class="n-overlay fixed inset-0 z-[75]" role="dialog" aria-modal="true">
+  <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" data-close></div>
+  <div class="absolute inset-0 flex items-end justify-center p-0 sm:items-center sm:p-6">
+    <div class="n-panel n-scroll max-h-[92vh] w-full max-w-md overflow-y-auto rounded-t-3xl border border-white/[0.08] bg-mineral sm:rounded-2xl">
+      <div class="sticky top-0 flex items-center justify-between gap-3 border-b border-white/[0.06] bg-mineral/95 px-5 py-4 backdrop-blur-xl">
+        <p class="text-sm font-bold text-white">Mon profil</p>
+        <button type="button" class="grid h-8 w-8 place-items-center rounded-full border border-white/10 text-white/60 transition hover:text-white" data-close aria-label="Fermer">
+          <i data-lucide="x" class="h-4 w-4"></i>
+        </button>
+      </div>
+      <form id="profile-form" class="space-y-4 px-5 py-5">
+        <div>
+          <label class="n-label" for="profile-name">Nom</label>
+          <input id="profile-name" class="n-field" required />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="n-label" for="profile-city">Ville</label>
+            <input id="profile-city" class="n-field" required />
+          </div>
+          <div>
+            <label class="n-label" for="profile-status">Disponibilité</label>
+            <select id="profile-status" class="n-field">
+              <option value="available">Disponible</option>
+              <option value="touring">En tournée</option>
+            </select>
+          </div>
+        </div>
+        <div id="profile-talent-only" class="space-y-4">
+          <div>
+            <label class="n-label" for="profile-specialty">Spécialité</label>
+            <input id="profile-specialty" class="n-field" />
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="n-label" for="profile-rate">Tarif net (€)</label>
+              <input id="profile-rate" type="number" min="0" step="10" class="n-field font-mono" />
+            </div>
+            <div>
+              <label class="n-label" for="profile-unit">Unité</label>
+              <select id="profile-unit" class="n-field">
+                <option value="set">/ set</option>
+                <option value="h">/ h</option>
+                <option value="shoot">/ shoot</option>
+                <option value="show">/ show</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="n-label" for="profile-gear">Matériel / setup</label>
+            <input id="profile-gear" class="n-field" />
+          </div>
+        </div>
+        <button type="submit" class="w-full rounded-xl bg-white py-3 text-xs font-bold text-black transition hover:scale-[1.02] active:scale-100">Enregistrer</button>
+        <button type="button" id="profile-reset" class="w-full text-center text-[11px] font-medium text-white/30 transition hover:text-white/60">Réinitialiser mes données locales</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Toasts -->
+<div id="toasts" class="pointer-events-none fixed bottom-24 left-1/2 z-[95] flex w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 flex-col gap-2 md:bottom-8"></div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ══════════════════════════════════════════════════════════
+     1. UTILITAIRES
+     ══════════════════════════════════════════════════════ */
+  const $ = (sel, root) => (root || document).querySelector(sel);
+  const $$ = (sel, root) => Array.prototype.slice.call((root || document).querySelectorAll(sel));
+
+  const ESCAPES = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+  const esc = (value) => String(value == null ? "" : value).replace(/[&<>"']/g, (c) => ESCAPES[c]);
+  const uid = (prefix) => (prefix || "id") + "_" + Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-3);
+
+  /** Lucide doit être rappelé après chaque injection dynamique. */
+  const refreshIcons = () => { if (window.lucide && typeof window.lucide.createIcons === "function") window.lucide.createIcons(); };
+
+  const numberFR = new Intl.NumberFormat("fr-FR");
+  const eur = (n) => numberFR.format(Number(n) || 0) + " €";
+
+  const initials = (name) =>
+    String(name || "NG")
+      .replace(/[^\p{L}\p{N}\s'-]/gu, "")
+      .trim()
+      .split(/[\s'-]+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((w) => w[0].toUpperCase())
+      .join("") || "NG";
+
+  const timeAgo = (ts) => {
+    const diff = Math.max(0, Date.now() - Number(ts));
+    const min = Math.floor(diff / 60000);
+    if (min < 1) return "à l'instant";
+    if (min < 60) return "il y a " + min + " min";
+    const h = Math.floor(min / 60);
+    if (h < 24) return "il y a " + h + " h";
+    const d = Math.floor(h / 24);
+    if (d < 7) return "il y a " + d + " j";
+    return new Date(Number(ts)).toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+  };
+
+  const longDate = (iso) => {
+    if (!iso) return "Date à définir";
+    const d = new Date(iso + "T12:00:00");
+    if (isNaN(d)) return iso;
+    const s = d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "long" });
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  };
+
+  const shortDate = (iso) => {
+    if (!iso) return "—";
+    const d = new Date(iso + "T12:00:00");
+    if (isNaN(d)) return iso;
+    return d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "2-digit" });
+  };
+
+  const nextSaturday = () => {
+    const d = new Date();
+    d.setDate(d.getDate() + ((6 - d.getDay() + 7) % 7 || 7));
+    return d.toISOString().slice(0, 10);
+  };
+
+  const splitList = (value) =>
+    String(value || "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+  /* ══════════════════════════════════════════════════════════
+     2. RÉFÉRENTIELS
+     ══════════════════════════════════════════════════════ */
+  const DISCIPLINE_FILTERS = [
+    { id: "all", label: "Tous" },
+    { id: "dj", label: "DJ" },
+    { id: "photo", label: "Photo" },
+    { id: "video", label: "Vidéo" },
+    { id: "light", label: "Scéno & Light" },
+  ];
+  const MISSION_FILTERS = [
+    { id: "all", label: "Toutes" },
+    { id: "dj", label: "DJ" },
+    { id: "photo", label: "Photo" },
+    { id: "video", label: "Vidéo" },
+    { id: "light", label: "Scéno & Light" },
+  ];
+  const DISCIPLINE_LABEL = { dj: "DJ", photo: "Photo", video: "Vidéo", light: "Scéno & Light" };
+  const UNIT_LABEL = { set: "set", h: "h", shoot: "shoot", show: "show" };
+  const DEFAULT_UNIT = { dj: "set", photo: "shoot", video: "h", light: "show" };
+  const JOB_NOUN = { dj: "sets", photo: "shoots", video: "livraisons", light: "shows" };
+  const CITIES = ["Paris", "Lyon", "Marseille", "Bordeaux", "Lille", "Toulouse", "Nantes", "Nice", "Strasbourg", "Montpellier"];
+  const UNSPLASH = (id) => "https://images.unsplash.com/photo-" + id + "?auto=format&fit=crop&w=900&h=560&q=72";
+
+  /* ══════════════════════════════════════════════════════════
+     3. DONNÉES DE DÉMONSTRATION
+     ══════════════════════════════════════════════════════ */
+  const seedTalents = () => [
+    {
+      id: "t_lea", name: "Léa Moreau", discipline: "dj", specialty: "Melodic Techno & Peak Time",
+      city: "Paris", status: "available", rating: 4.9, jobs: 18, rate: 350, unit: "set",
+      gear: ["Pioneer CDJ-3000", "Allen & Heath Xone:96", "Pioneer HDJ-X10"],
+      image: UNSPLASH("1547355253-ff0740f6e8c1"),
+      bio: "Résidente parisienne, spécialisée dans les closings longs format. Lecture de foule précise, transitions harmoniques, sets de 2 à 4 h sans temps mort.",
+      experience: "6 ans", responseRate: 96, radius: "Paris + 250 km", languages: ["FR", "EN"],
+      rider: ["2 × CDJ-3000 + DJM-A9 (ou Xone:96)", "Retour booth stéréo calibré", "Table stabilisée 1,20 m minimum", "Accès booth 45 min avant le set"],
+      references: ["Rex Club", "Badaboum", "Nuits Sonores · off"],
+      slots: [{ label: "Vendredi", state: "Libre" }, { label: "Samedi", state: "Option" }, { label: "Dimanche", state: "Libre" }],
+    },
+    {
+      id: "t_lukas", name: "Lukas Yuen", discipline: "video", specialty: "Aftermovie 4K & Reels verticaux",
+      city: "Lyon", status: "touring", rating: 4.8, jobs: 32, rate: 85, unit: "h",
+      gear: ["Sony FX3", "DJI RS 4 Pro", "Sigma 24-70 DG DN"],
+      image: UNSPLASH("1533174072545-7a4b6ad7a6c3"),
+      bio: "Réalisateur nocturne. Aftermovies livrés en 72 h, formats verticaux optimisés réseaux, étalonnage argentique signature.",
+      experience: "5 ans", responseRate: 91, radius: "Lyon + national", languages: ["FR", "EN", "ZH"],
+      rider: ["Accès scène et backstage", "Autorisation de captation signée", "Point d'alimentation 230 V en régie", "Brief 48 h avant l'événement"],
+      references: ["Sucre Rooftop", "Transbordeur", "Collectif Aurora"],
+      slots: [{ label: "Vendredi", state: "En tournée" }, { label: "Samedi", state: "En tournée" }, { label: "Dimanche", state: "Libre" }],
+    },
+    {
+      id: "t_ines", name: "Inès Durand", discipline: "photo", specialty: "Reportage clubbing & portrait backstage",
+      city: "Marseille", status: "available", rating: 5.0, jobs: 27, rate: 240, unit: "shoot",
+      gear: ["Sony A7 IV", "Sigma 35 mm f/1.2", "Godox V1"],
+      image: UNSPLASH("1492684223066-81342ee5ff30"),
+      bio: "Photographe de nuit, travail en basse lumière sans flash direct. Sélection livrée sous 24 h, retouche haut de gamme incluse.",
+      experience: "8 ans", responseRate: 99, radius: "Marseille + 150 km", languages: ["FR", "EN", "ES"],
+      rider: ["Accès libre à la salle et au booth", "Liste des artistes à couvrir en amont", "Vestiaire sécurisé pour le matériel"],
+      references: ["Cabaret Aléatoire", "Le Molotov", "Bassment Club"],
+      slots: [{ label: "Vendredi", state: "Libre" }, { label: "Samedi", state: "Libre" }, { label: "Dimanche", state: "Option" }],
+    },
+    {
+      id: "t_karim", name: "Karim Benali", discipline: "light", specialty: "Scénographie immersive & mapping",
+      city: "Paris", status: "available", rating: 4.7, jobs: 14, rate: 620, unit: "show",
+      gear: ["GrandMA3 onPC", "Robe Pointe ×8", "Resolume Arena 7"],
+      image: UNSPLASH("1514525253161-7a46d19cd819"),
+      bio: "Light designer et scénographe. Conception de plans de feu timecodés, mapping sur structures existantes, jauges de 200 à 3 000 personnes.",
+      experience: "9 ans", responseRate: 88, radius: "France entière", languages: ["FR", "EN", "AR"],
+      rider: ["Plan de salle et inventaire parc lumière", "Régie avec vue directe sur scène", "2 techniciens pour le montage", "Repérage sur site sous 15 jours"],
+      references: ["Dour Festival", "Machine du Moulin Rouge", "Halo Organisation"],
+      slots: [{ label: "Vendredi", state: "Option" }, { label: "Samedi", state: "Libre" }, { label: "Dimanche", state: "Libre" }],
+    },
+    {
+      id: "t_salome", name: "Salomé Vidal", discipline: "dj", specialty: "Afro House & Sunset Grooves",
+      city: "Bordeaux", status: "available", rating: 4.8, jobs: 22, rate: 300, unit: "set",
+      gear: ["Pioneer CDJ-3000", "Rane Seventy-Two", "Ableton Push 3"],
+      image: UNSPLASH("1493676304819-0d7a8d026dcf"),
+      bio: "Spécialiste des ouvertures et sunsets rooftop. Sélection organique, percussions live occasionnelles, montée progressive maîtrisée.",
+      experience: "4 ans", responseRate: 94, radius: "Sud-Ouest", languages: ["FR", "ES"],
+      rider: ["2 × CDJ + mixette 4 voies", "Entrée ligne pour pad percussif", "Bâche si scène extérieure"],
+      references: ["Iboat", "Le Wonderland", "Darwin"],
+      slots: [{ label: "Vendredi", state: "Libre" }, { label: "Samedi", state: "Libre" }, { label: "Dimanche", state: "Libre" }],
+    },
+    {
+      id: "t_theo", name: "Théo Marchand", discipline: "dj", specialty: "Hard Groove & Warehouse",
+      city: "Lille", status: "touring", rating: 4.6, jobs: 31, rate: 420, unit: "set",
+      gear: ["Pioneer CDJ-3000", "DJM-V10", "Technics SL-1210"],
+      image: UNSPLASH("1470225620780-dba8ba36b745"),
+      bio: "Sets rapides, mixage à trois platines, culture warehouse. Habitué des créneaux 3 h – 6 h et des jauges denses.",
+      experience: "7 ans", responseRate: 85, radius: "Nord + Benelux", languages: ["FR", "EN", "NL"],
+      rider: ["3 × CDJ-3000 + DJM-V10", "Retour booth puissant et découplé", "Créneau nuit profonde privilégié"],
+      references: ["Magazine Club", "Fuse Bruxelles", "Warehouse District"],
+      slots: [{ label: "Vendredi", state: "En tournée" }, { label: "Samedi", state: "Option" }, { label: "Dimanche", state: "Libre" }],
+    },
+    {
+      id: "t_anais", name: "Anaïs Cordier", discipline: "photo", specialty: "Editorial nocturne & argentique",
+      city: "Nantes", status: "available", rating: 4.9, jobs: 19, rate: 280, unit: "shoot",
+      gear: ["Canon R6 II", "Canon 50 mm f/1.2", "Contax T2"],
+      image: UNSPLASH("1493225457124-a3eb161ffa5f"),
+      bio: "Approche editorial, mélange numérique et argentique. Direction artistique de séries d'artistes et couvertures de résidences.",
+      experience: "6 ans", responseRate: 97, radius: "Grand Ouest", languages: ["FR", "EN"],
+      rider: ["Créneau de 30 min pour le portrait", "Loge ou fond neutre disponible", "Crédits photo mentionnés en publication"],
+      references: ["Stereolux", "Trempolino", "Macadam"],
+      slots: [{ label: "Vendredi", state: "Libre" }, { label: "Samedi", state: "Libre" }, { label: "Dimanche", state: "Libre" }],
+    },
+    {
+      id: "t_yanis", name: "Yanis Rebbah", discipline: "video", specialty: "Clip live & motion design",
+      city: "Toulouse", status: "available", rating: 4.7, jobs: 24, rate: 95, unit: "h",
+      gear: ["Blackmagic 6K", "Zhiyun Crane 4", "After Effects"],
+      image: UNSPLASH("1598387993441-a364f854c3e1"),
+      bio: "Captation multicam de concerts et clips live. Habillage motion et génériques signés, livraison master + formats sociaux.",
+      experience: "5 ans", responseRate: 90, radius: "Occitanie + national", languages: ["FR", "EN"],
+      rider: ["2 emplacements caméra dégagés", "Sortie audio console (XLR ou multipiste)", "Accès balances pour repérage"],
+      references: ["Le Bikini", "Rio Grande", "Nightline Productions"],
+      slots: [{ label: "Vendredi", state: "Libre" }, { label: "Samedi", state: "Option" }, { label: "Dimanche", state: "Libre" }],
+    },
+    {
+      id: "t_camille", name: "Camille Okoye", discipline: "dj", specialty: "Bass House & UK Garage",
+      city: "Strasbourg", status: "available", rating: 4.8, jobs: 16, rate: 320, unit: "set",
+      gear: ["Pioneer CDJ-3000", "DJM-900NXS2", "Shure SM58"],
+      image: UNSPLASH("1516450360452-9312f5e86fc7"),
+      bio: "Sélections garage, bass et 2-step. Sets énergiques avec prises de micro ponctuelles, à l'aise sur les jauges intermédiaires.",
+      experience: "3 ans", responseRate: 98, radius: "Grand Est + Suisse", languages: ["FR", "EN", "DE"],
+      rider: ["2 × CDJ-3000 + DJM-900", "Micro filaire sur pied", "Retour booth réglable"],
+      references: ["La Laiterie", "Artefact", "Zenith Bar"],
+      slots: [{ label: "Vendredi", state: "Libre" }, { label: "Samedi", state: "Libre" }, { label: "Dimanche", state: "Option" }],
+    },
+    {
+      id: "t_noor", name: "Noor Haddad", discipline: "light", specialty: "Light design & conduite timecode",
+      city: "Lyon", status: "available", rating: 4.9, jobs: 21, rate: 480, unit: "show",
+      gear: ["Chamsys MQ80", "Martin MAC Aura", "Hazebase Classic"],
+      image: UNSPLASH("1459749411175-04bf5292ceea"),
+      bio: "Conduite lumière à la main ou en timecode, esthétique minérale et contrastée. Travail étroit avec les DJ sur les points de bascule.",
+      experience: "7 ans", responseRate: 93, radius: "Rhône-Alpes + national", languages: ["FR", "EN"],
+      rider: ["Patch lumière transmis 72 h avant", "Machine à brouillard autorisée", "Console en salle, pas en coulisse"],
+      references: ["Le Sucre", "Grrrnd Zero", "Nuits Sonores"],
+      slots: [{ label: "Vendredi", state: "Libre" }, { label: "Samedi", state: "Libre" }, { label: "Dimanche", state: "Libre" }],
+    },
+    {
+      id: "t_elias", name: "Elias Fontaine", discipline: "dj", specialty: "Disco Italo & Open Format",
+      city: "Nice", status: "available", rating: 4.6, jobs: 29, rate: 260, unit: "set",
+      gear: ["Technics SL-1200 MK7", "Rotary Bozak AR-4", "Vinyle only"],
+      image: UNSPLASH("1483412033650-1015ddeb83d1"),
+      bio: "Digger vinyle, disco italo et sélections open format pour bars et rooftops. Sets longue durée, ambiance continue sans rupture.",
+      experience: "12 ans", responseRate: 87, radius: "Côte d'Azur", languages: ["FR", "IT", "EN"],
+      rider: ["2 × platines vinyle révisées + cellules", "Mixette rotative si possible", "Table 1,40 m avec éclairage d'appoint"],
+      references: ["Bar Mirage", "Le Rooftop 21", "Sunset Social Club"],
+      slots: [{ label: "Vendredi", state: "Libre" }, { label: "Samedi", state: "Option" }, { label: "Dimanche", state: "Libre" }],
+    },
+    {
+      id: "t_maya", name: "Maya Lindqvist", discipline: "photo", specialty: "Grand angle live & foule",
+      city: "Paris", status: "touring", rating: 4.8, jobs: 35, rate: 310, unit: "shoot",
+      gear: ["Nikon Z8", "Nikkor 14-24 f/2.8", "Profoto A10"],
+      image: UNSPLASH("1506157786151-b8491531f063"),
+      bio: "Images larges, scène et foule dans le même cadre. Habituée aux festivals et aux grandes jauges, livraison express en 12 h.",
+      experience: "10 ans", responseRate: 92, radius: "Europe", languages: ["FR", "EN", "SV"],
+      rider: ["Accès fosse photo", "Pass circulation complet", "Cession de droits négociée par usage"],
+      references: ["Rock en Seine", "Elysée Montmartre", "Pulse Events"],
+      slots: [{ label: "Vendredi", state: "En tournée" }, { label: "Samedi", state: "En tournée" }, { label: "Dimanche", state: "Option" }],
+    },
+  ];
+
+  const seedPosts = () => {
+    const now = Date.now();
+    return [
+      {
+        id: "p_seed1", authorName: "Léa Moreau", authorRole: "DJ · Melodic Techno", authorCity: "Paris",
+        ts: now - 42 * 60000, own: false, likes: 34, liked: false,
+        text: "Closing de 3 h au Rex hier, la salle a tenu jusqu'au bout. Deux dates encore libres en septembre pour du peak time, écrivez-moi ici plutôt qu'en DM.",
+        media: { type: "image", src: UNSPLASH("1540039155733-5bb30b53aa14") },
+        comments: [
+          { id: "c1", author: "Bassment Club", text: "On te veut sur notre closing du 20. Je passe par le booking.", ts: now - 28 * 60000 },
+        ],
+      },
+      {
+        id: "p_seed2", authorName: "Bassment Club", authorRole: "Club · 400 places", authorCity: "Marseille",
+        ts: now - 4 * 3600000, own: false, likes: 12, liked: false,
+        text: "On cherche un photographe pour notre anniversaire le 5 septembre. Cachet net 320 €, sélection de 40 images, accès booth et backstage garanti. Mission déposée dans les annonces.",
+        media: null,
+        comments: [],
+      },
+      {
+        id: "p_seed3", authorName: "Lukas Yuen", authorRole: "Vidéaste · Aftermovie", authorCity: "Lyon",
+        ts: now - 26 * 3600000, own: false, likes: 51, liked: false,
+        text: "Aftermovie du week-end livré en 68 h, master 4K plus trois formats verticaux. Les organisateurs qui veulent du contenu exploitable dès le lundi matin, c'est le bon rythme.",
+        media: { type: "image", src: UNSPLASH("1524368535928-5b5e00ddc76b") },
+        comments: [
+          { id: "c2", author: "Collectif Aurora", text: "Le montage vertical a doublé notre portée sur les stories.", ts: now - 20 * 3600000 },
+          { id: "c3", author: "Karim Benali", text: "Belle lecture des ambiances lumière.", ts: now - 12 * 3600000 },
+        ],
+      },
+    ];
+  };
+
+  const seedMissions = () => {
+    const iso = (offset) => { const d = new Date(); d.setDate(d.getDate() + offset); return d.toISOString().slice(0, 10); };
+    return [
+      {
+        id: "m_seed1", title: "DJ closing samedi · house & techno", discipline: "dj", venue: "Le Rex Club", city: "Paris",
+        date: iso(12), time: "02:00", duration: "3 h", budget: 450, urgent: false, applicants: 7, own: false,
+        description: "Closing de 3 h sur un samedi complet. Booth CDJ-3000 et DJM-A9 en place, jauge 700 personnes. On cherche une lecture de foule solide sur la fin de nuit.",
+      },
+      {
+        id: "m_seed2", title: "Aftermovie festival · 2 jours", discipline: "video", venue: "Collectif Aurora", city: "Lyon",
+        date: iso(19), time: "16:00", duration: "2 jours", budget: 1400, urgent: false, applicants: 4, own: false,
+        description: "Captation sur deux jours, livraison d'un aftermovie de 90 s et de six formats verticaux. Accès scène et backstage fourni, hébergement pris en charge.",
+      },
+      {
+        id: "m_seed3", title: "Reportage anniversaire du club", discipline: "photo", venue: "Bassment Club", city: "Marseille",
+        date: iso(5), time: "23:30", duration: "4 h", budget: 320, urgent: true, applicants: 11, own: false,
+        description: "Quarante images retouchées attendues sous 48 h. Couverture booth, foule et backstage. Travail en basse lumière sans flash direct dans la salle principale.",
+      },
+      {
+        id: "m_seed4", title: "Light design salle 600 places", discipline: "light", venue: "La Sirène Électrique", city: "Bordeaux",
+        date: iso(26), time: "20:00", duration: "Soirée complète", budget: 900, urgent: false, applicants: 3, own: false,
+        description: "Conception et conduite d'un plan de feu sur trois plateaux. Parc lumière existant à valider en repérage, régie en salle avec vue directe sur scène.",
+      },
+      {
+        id: "m_seed5", title: "DJ warm-up rooftop sunset", discipline: "dj", venue: "Rooftop 21", city: "Nice",
+        date: iso(3), time: "19:00", duration: "2 h", budget: 280, urgent: true, applicants: 9, own: false,
+        description: "Ouverture en douceur, afro house et disco. Deux platines et mixette quatre voies sur place. Set de 19 h à 21 h, relève assurée par le résident.",
+      },
+      {
+        id: "m_seed6", title: "Captation clip live en club", discipline: "video", venue: "Studio Nocturne", city: "Lille",
+        date: iso(15), time: "21:00", duration: "5 h", budget: 700, urgent: false, applicants: 2, own: false,
+        description: "Clip live d'un live set, deux caméras minimum et sortie console multipiste disponible. Repérage possible pendant les balances en fin d'après-midi.",
+      },
+    ];
+  };
+
+  /* ══════════════════════════════════════════════════════════
+     4. ÉTAT & PERSISTANCE
+     ══════════════════════════════════════════════════════ */
+  const STORAGE_KEY = "nightly.state.v1";
+
+  const defaultState = () => ({
+    user: null,
+    talents: seedTalents(),
+    posts: seedPosts(),
+    missions: seedMissions(),
+    bookings: [],
+    onboarded: false,
+    ui: { tab: "talents", talentFilter: "all", talentQuery: "", talentCity: "all", missionFilter: "all" },
+  });
+
+  let state = defaultState();
+  let draftMedia = null;
+  let bookingTarget = null;
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const saved = JSON.parse(raw);
+      if (!saved || typeof saved !== "object") return;
+      state = Object.assign(defaultState(), saved, {
+        ui: Object.assign(defaultState().ui, saved.ui || {}),
+      });
+      if (!Array.isArray(state.talents) || !state.talents.length) state.talents = seedTalents();
+      if (!Array.isArray(state.posts)) state.posts = seedPosts();
+      if (!Array.isArray(state.missions)) state.missions = seedMissions();
+      if (!Array.isArray(state.bookings)) state.bookings = [];
+    } catch (err) {
+      state = defaultState();
+    }
+  }
+
+  function saveState() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (err) {
+      // Quota dépassé : on retente sans les médias encodés en base64.
+      try {
+        const slim = JSON.parse(JSON.stringify(state));
+        slim.posts = slim.posts.map((p) => {
+          if (p.media && typeof p.media.src === "string" && p.media.src.startsWith("data:")) return Object.assign({}, p, { media: null });
+          return p;
+        });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(slim));
+      } catch (inner) {
+        /* stockage indisponible : l'application reste utilisable en mémoire */
+      }
+    }
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     5. TOASTS & OVERLAYS
+     ══════════════════════════════════════════════════════ */
+  function toast(message, tone) {
+    const host = $("#toasts");
+    if (!host) return;
+    const accent = tone === "cyan" ? "text-neon-cyan" : "text-white";
+    const el = document.createElement("div");
+    el.className = "n-toast pointer-events-auto flex items-start gap-2.5 rounded-xl border border-white/[0.1] bg-mineral/95 px-4 py-3 shadow-2xl backdrop-blur-xl";
+    el.innerHTML =
+      '<i data-lucide="' + (tone === "cyan" ? "check-circle-2" : "info") + '" class="mt-px h-4 w-4 shrink-0 ' + accent + '"></i>' +
+      '<p class="text-xs leading-relaxed text-white/85">' + esc(message) + "</p>";
+    host.appendChild(el);
+    refreshIcons();
+    setTimeout(() => {
+      el.style.transition = "opacity .3s ease, transform .3s ease";
+      el.style.opacity = "0";
+      el.style.transform = "translateY(8px)";
+      setTimeout(() => el.remove(), 320);
+    }, 3600);
+  }
+
+  const openOverlays = [];
+
+  function openOverlay(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.add("is-open");
+    if (openOverlays.indexOf(id) === -1) openOverlays.push(id);
+    document.body.style.overflow = "hidden";
+    refreshIcons();
+  }
+
+  function closeOverlay(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.remove("is-open");
+    const i = openOverlays.indexOf(id);
+    if (i !== -1) openOverlays.splice(i, 1);
+    if (!openOverlays.length) document.body.style.overflow = "";
+  }
+
+  document.addEventListener("click", (e) => {
+    const closer = e.target.closest("[data-close]");
+    if (!closer) return;
+    const overlay = closer.closest(".n-overlay");
+    if (overlay && overlay.id) closeOverlay(overlay.id);
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape" || !openOverlays.length) return;
+    const top = openOverlays[openOverlays.length - 1];
+    if (top === "onboarding") return;
+    closeOverlay(top);
+  });
+
+  /* ══════════════════════════════════════════════════════════
+     6. NAVIGATION PAR ONGLETS
+     ══════════════════════════════════════════════════════ */
+  function setTab(tab) {
+    const valid = ["feed", "annonces", "talents", "pass"];
+    if (valid.indexOf(tab) === -1) tab = "feed";
+    state.ui.tab = tab;
+
+    $$(".tab-panel").forEach((panel) => panel.classList.toggle("hidden", panel.dataset.panel !== tab));
+
+    $$(".nav-desktop").forEach((btn) => {
+      const active = btn.dataset.tab === tab;
+      btn.classList.toggle("bg-white/[0.09]", active);
+      btn.classList.toggle("text-white", active);
+      btn.classList.toggle("text-white/45", !active);
+      btn.classList.toggle("hover:text-white/75", !active);
+    });
+
+    $$(".nav-mobile").forEach((btn) => {
+      const active = btn.dataset.tab === tab;
+      btn.classList.toggle("text-white", active);
+      btn.classList.toggle("text-white/35", !active);
+    });
+
+    if (tab === "pass") renderPass();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    saveState();
+  }
+
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-tab]");
+    if (!btn) return;
+    e.preventDefault();
+    setTab(btn.dataset.tab);
+  });
+
+  /* ══════════════════════════════════════════════════════════
+     7. IDENTITÉ
+     ══════════════════════════════════════════════════════ */
+  function ownTalent() {
+    if (!state.user || state.user.role !== "talent") return null;
+    return state.talents.filter((t) => t.own)[0] || null;
+  }
+
+  function renderIdentity() {
+    const user = state.user;
+    const name = user ? user.name : "Créer un profil";
+    const role = user
+      ? user.role === "talent"
+        ? DISCIPLINE_LABEL[user.discipline] + " · " + user.city
+        : (user.structure || "Organisateur") + " · " + user.city
+      : "Non connecté";
+
+    $("#header-name").textContent = name;
+    $("#header-role").textContent = role;
+    $("#header-avatar").textContent = user ? initials(user.name) : "NG";
+    $("#composer-avatar").textContent = user ? initials(user.name) : "NG";
+
+    const input = $("#post-input");
+    input.placeholder = user
+      ? "Partagez une actu, un besoin, une dispo de dernière minute…"
+      : "Créez votre profil pour publier dans le feed";
+  }
+
+  $("#header-identity").addEventListener("click", () => {
+    if (!state.user) openOnboarding();
+    else openProfileModal();
+  });
+
+  /* ══════════════════════════════════════════════════════════
+     8. ONBOARDING
+     ══════════════════════════════════════════════════════ */
+  let onbStep = 1;
+  let onbRole = "talent";
+
+  function openOnboarding() {
+    onbStep = 1;
+    if (state.user) onbRole = state.user.role;
+    renderOnbStep();
+    openOverlay("onboarding");
+  }
+
+  function renderOnbStep() {
+    $$(".onb-step").forEach((step) => step.classList.toggle("hidden", Number(step.dataset.step) !== onbStep));
+    $("#onb-step-label").textContent = onbStep + " / 3";
+    $("#onb-progress").style.width = Math.round((onbStep / 3) * 100) + "%";
+
+    const isTalent = onbRole === "talent";
+    $("#onb-name-label").textContent = isTalent ? "Nom de scène" : "Votre nom";
+    $("#onb-step3-title").textContent = isTalent ? "Votre offre" : "Votre structure";
+    $("#onb-step3-sub").textContent = isTalent
+      ? "Ces informations alimentent votre carte dans le roster."
+      : "Ces informations apparaissent sur vos annonces.";
+    $("#onb-talent-fields").classList.toggle("hidden", !isTalent);
+    $("#onb-orga-fields").classList.toggle("hidden", isTalent);
+    refreshIcons();
+  }
+
+  $$(".onb-role").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      onbRole = btn.dataset.role;
+      onbStep = 2;
+      renderOnbStep();
+      setTimeout(() => $("#onb-name").focus(), 60);
+    });
+  });
+
+  $$(".onb-back").forEach((btn) => btn.addEventListener("click", () => { onbStep = Math.max(1, onbStep - 1); renderOnbStep(); }));
+
+  $$(".onb-next").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      const name = $("#onb-name").value.trim();
+      if (name.length < 2) { toast("Indiquez un nom d'au moins deux caractères."); $("#onb-name").focus(); return; }
+      onbStep = 3;
+      renderOnbStep();
+    })
+  );
+
+  $("#onb-skip").addEventListener("click", () => {
+    state.onboarded = true;
+    saveState();
+    closeOverlay("onboarding");
+    toast("Vous explorez NIGHTLY sans profil. Créez-le à tout moment depuis l'en-tête.");
+  });
+
+  $("#onb-finish").addEventListener("click", () => {
+    const name = $("#onb-name").value.trim();
+    const city = $("#onb-city").value || CITIES[0];
+    if (name.length < 2) { onbStep = 2; renderOnbStep(); toast("Indiquez un nom d'au moins deux caractères."); return; }
+
+    if (onbRole === "talent") {
+      const discipline = $("#onb-discipline").value;
+      const specialty = $("#onb-specialty").value.trim() || DISCIPLINE_LABEL[discipline] + " · profil en cours de description";
+      const rate = Number($("#onb-rate").value) || 250;
+      const unit = $("#onb-unit").value || DEFAULT_UNIT[discipline];
+      const gear = splitList($("#onb-gear").value);
+
+      state.user = { role: "talent", name: name, city: city, discipline: discipline, since: Date.now(), pass: newPassCode() };
+
+      const existing = ownTalent();
+      const profile = {
+        id: existing ? existing.id : uid("t_own"),
+        own: true, name: name, discipline: discipline, specialty: specialty, city: city,
+        status: "available", rating: 0, jobs: 0, rate: rate, unit: unit,
+        gear: gear.length ? gear : ["Setup à préciser"],
+        image: "",
+        bio: "Profil créé sur NIGHTLY. Complétez votre biographie et votre rider pour rassurer les programmateurs.",
+        experience: "Nouveau", responseRate: 100, radius: city + " et alentours", languages: ["FR"],
+        rider: ["Rider à compléter depuis votre profil"],
+        references: [],
+        slots: [{ label: "Vendredi", state: "Libre" }, { label: "Samedi", state: "Libre" }, { label: "Dimanche", state: "Libre" }],
+      };
+      state.talents = [profile].concat(state.talents.filter((t) => !t.own));
+    } else {
+      const structure = $("#onb-structure").value.trim() || name;
+      state.user = {
+        role: "organisateur", name: name, city: city, structure: structure,
+        venueType: $("#onb-orga-type").value, capacity: Number($("#onb-capacity").value) || null,
+        since: Date.now(), pass: newPassCode(),
+      };
+      state.talents = state.talents.filter((t) => !t.own);
+    }
+
+    state.onboarded = true;
+    saveState();
+    closeOverlay("onboarding");
+    renderAll();
+    setTab(onbRole === "talent" ? "talents" : "annonces");
+    toast("Profil activé. Votre pass NIGHTLY est prêt.", "cyan");
+  });
+
+  /* ══════════════════════════════════════════════════════════
+     9. FEED
+     ══════════════════════════════════════════════════════ */
+  function postCard(post) {
+    const media = post.media && post.media.src
+      ? '<div class="mt-3 overflow-hidden rounded-xl border border-white/[0.07]">' +
+        '<img src="' + esc(post.media.src) + '" alt="Média de la publication" loading="lazy" class="max-h-[420px] w-full object-cover" />' +
+        "</div>"
+      : "";
+
+    const comments = (post.comments || [])
+      .map(
+        (c) =>
+          '<li class="flex gap-2.5">' +
+          '<span class="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/[0.07] text-[10px] font-bold text-white/70">' + esc(initials(c.author)) + "</span>" +
+          '<div class="min-w-0 flex-1 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2">' +
+          '<p class="text-[11px] font-semibold text-white/85">' + esc(c.author) + ' <span class="ml-1 font-normal text-white/30">' + esc(timeAgo(c.ts)) + "</span></p>" +
+          '<p class="mt-1 text-xs leading-relaxed text-white/65">' + esc(c.text) + "</p>" +
+          "</div></li>"
+      )
+      .join("");
+
+    return (
+      '<article class="n-rise overflow-hidden rounded-2xl border border-white/[0.08] bg-mineral" data-post="' + esc(post.id) + '">' +
+        '<div class="p-4">' +
+          '<div class="flex items-start gap-3">' +
+            '<span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/[0.08] text-xs font-bold text-white/80">' + esc(initials(post.authorName)) + "</span>" +
+            '<div class="min-w-0 flex-1">' +
+              '<p class="font-display text-sm font-bold leading-tight text-white">' + esc(post.authorName) + "</p>" +
+              '<p class="mt-0.5 text-[11px] text-white/40">' + esc(post.authorRole) + " · " + esc(post.authorCity) + " · " + esc(timeAgo(post.ts)) + "</p>" +
+            "</div>" +
+            (post.own
+              ? '<button type="button" data-post-delete="' + esc(post.id) + '" class="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-white/[0.08] text-white/35 transition hover:border-white/20 hover:text-white" aria-label="Supprimer la publication"><i data-lucide="trash-2" class="h-3.5 w-3.5"></i></button>'
+              : "") +
+          "</div>" +
+          '<p class="mt-3 whitespace-pre-line text-sm leading-relaxed text-white/80">' + esc(post.text) + "</p>" +
+          media +
+          '<div class="mt-3.5 flex items-center gap-1 border-t border-white/[0.06] pt-3">' +
+            '<button type="button" data-post-like="' + esc(post.id) + '" class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[11px] font-medium transition ' +
+              (post.liked ? "text-neon-cyan" : "text-white/45 hover:text-white/80") + '">' +
+              '<i data-lucide="heart" class="h-3.5 w-3.5"></i><span class="font-mono">' + Number(post.likes || 0) + "</span></button>" +
+            '<button type="button" data-post-comments="' + esc(post.id) + '" class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[11px] font-medium text-white/45 transition hover:text-white/80">' +
+              '<i data-lucide="message-circle" class="h-3.5 w-3.5"></i><span class="font-mono">' + (post.comments || []).length + "</span></button>" +
+          "</div>" +
+          '<div class="mt-3 hidden" data-comments-panel="' + esc(post.id) + '">' +
+            (comments ? '<ul class="space-y-2.5">' + comments + "</ul>" : '<p class="text-[11px] text-white/30">Aucun commentaire pour le moment.</p>') +
+            '<form class="mt-3 flex gap-2" data-comment-form="' + esc(post.id) + '">' +
+              '<input class="n-field flex-1 py-2 text-xs" placeholder="Écrire un commentaire" aria-label="Commentaire" />' +
+              '<button type="submit" class="shrink-0 rounded-xl border border-white/10 px-3 py-2 text-[11px] font-semibold text-white/70 transition hover:border-white/25 hover:text-white">Envoyer</button>' +
+            "</form>" +
+          "</div>" +
+        "</div>" +
+      "</article>"
+    );
+  }
+
+  function renderFeed() {
+    const list = $("#feed-list");
+    const posts = state.posts.slice().sort((a, b) => b.ts - a.ts);
+    list.innerHTML = posts.map(postCard).join("");
+    $("#feed-count").textContent = posts.length;
+    $("#side-talents").textContent = state.talents.length;
+    $("#side-missions").textContent = state.missions.length;
+
+    const available = state.talents.filter((t) => t.status === "available").slice(0, 4);
+    $("#side-available").innerHTML = available
+      .map(
+        (t) =>
+          '<li class="flex items-center gap-2.5"><span class="h-1.5 w-1.5 shrink-0 rounded-full bg-neon-cyan"></span>' +
+          '<span class="min-w-0 flex-1"><span class="block truncate font-display text-xs font-bold text-white">' + esc(t.name) + "</span>" +
+          '<span class="block truncate text-[10px] text-white/40">' + esc(DISCIPLINE_LABEL[t.discipline]) + " · " + esc(t.city) + "</span></span>" +
+          '<span class="shrink-0 font-mono text-[10px] text-white/50">' + esc(eur(t.rate)) + "</span></li>"
+      )
+      .join("");
+
+    refreshIcons();
+  }
+
+  function currentAuthor() {
+    const user = state.user;
+    if (!user) return null;
+    if (user.role === "talent") {
+      const own = ownTalent();
+      return { name: user.name, role: DISCIPLINE_LABEL[user.discipline] + (own && own.specialty ? " · " + own.specialty : ""), city: user.city };
+    }
+    return { name: user.structure || user.name, role: (user.venueType || "Organisateur") + (user.capacity ? " · " + user.capacity + " places" : ""), city: user.city };
+  }
+
+  function syncComposer() {
+    const hasText = $("#post-input").value.trim().length > 0;
+    $("#post-submit").disabled = !(hasText || draftMedia);
+  }
+
+  $("#post-input").addEventListener("input", syncComposer);
+
+  $("#post-media-input").addEventListener("change", (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { toast("Format non pris en charge. Choisissez une image."); return; }
+    if (file.size > 6 * 1024 * 1024) { toast("Image trop lourde. Limite fixée à 6 Mo."); return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      draftMedia = { type: "image", src: String(reader.result) };
+      $("#post-media-img").src = draftMedia.src;
+      $("#post-media-preview").classList.remove("hidden");
+      syncComposer();
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  });
+
+  $("#post-media-remove").addEventListener("click", () => {
+    draftMedia = null;
+    $("#post-media-img").removeAttribute("src");
+    $("#post-media-preview").classList.add("hidden");
+    syncComposer();
+  });
+
+  $("#post-submit").addEventListener("click", () => {
+    const author = currentAuthor();
+    if (!author) { openOnboarding(); return; }
+    const text = $("#post-input").value.trim();
+    if (!text && !draftMedia) return;
+
+    state.posts.unshift({
+      id: uid("p"), authorName: author.name, authorRole: author.role, authorCity: author.city,
+      ts: Date.now(), own: true, likes: 0, liked: false, text: text, media: draftMedia, comments: [],
+    });
+
+    $("#post-input").value = "";
+    draftMedia = null;
+    $("#post-media-preview").classList.add("hidden");
+    syncComposer();
+    saveState();
+    renderFeed();
+    toast("Publication en ligne.", "cyan");
+  });
+
+  $("#feed-list").addEventListener("click", (e) => {
+    const likeBtn = e.target.closest("[data-post-like]");
+    if (likeBtn) {
+      const post = state.posts.filter((p) => p.id === likeBtn.dataset.postLike)[0];
+      if (!post) return;
+      post.liked = !post.liked;
+      post.likes = Math.max(0, Number(post.likes || 0) + (post.liked ? 1 : -1));
+      saveState();
+      renderFeed();
+      return;
+    }
+
+    const commentBtn = e.target.closest("[data-post-comments]");
+    if (commentBtn) {
+      const panel = $('[data-comments-panel="' + commentBtn.dataset.postComments + '"]');
+      if (panel) {
+        panel.classList.toggle("hidden");
+        if (!panel.classList.contains("hidden")) {
+          const field = $("input", panel);
+          if (field) field.focus();
+        }
+      }
+      return;
+    }
+
+    const deleteBtn = e.target.closest("[data-post-delete]");
+    if (deleteBtn) {
+      state.posts = state.posts.filter((p) => p.id !== deleteBtn.dataset.postDelete);
+      saveState();
+      renderFeed();
+      toast("Publication supprimée.");
+    }
+  });
+
+  $("#feed-list").addEventListener("submit", (e) => {
+    const form = e.target.closest("[data-comment-form]");
+    if (!form) return;
+    e.preventDefault();
+    const author = currentAuthor();
+    if (!author) { openOnboarding(); return; }
+    const field = $("input", form);
+    const text = field.value.trim();
+    if (!text) return;
+    const post = state.posts.filter((p) => p.id === form.dataset.commentForm)[0];
+    if (!post) return;
+    post.comments = post.comments || [];
+    post.comments.push({ id: uid("c"), author: author.name, text: text, ts: Date.now() });
+    saveState();
+    renderFeed();
+    const panel = $('[data-comments-panel="' + post.id + '"]');
+    if (panel) panel.classList.remove("hidden");
+  });
+
+  /* ══════════════════════════════════════════════════════════
+     10. ANNONCES
+     ══════════════════════════════════════════════════════ */
+  function capsule(id, label, active) {
+    const base = "shrink-0 rounded-full py-1.5 px-3.5 text-xs transition duration-200 whitespace-nowrap";
+    const cls = active
+      ? base + " bg-white/15 border border-white/25 text-white font-semibold"
+      : base + " bg-transparent border border-white/10 text-white/50 font-medium hover:border-white/20 hover:text-white/80";
+    return '<button type="button" role="tab" aria-selected="' + (active ? "true" : "false") + '" data-capsule="' + esc(id) + '" class="' + cls + '">' + esc(label) + "</button>";
+  }
+
+  function renderMissionFilters() {
+    $("#mission-filters").innerHTML = MISSION_FILTERS.map((f) => capsule(f.id, f.label, state.ui.missionFilter === f.id)).join("");
+  }
+
+  function missionCard(m) {
+    const tags = [DISCIPLINE_LABEL[m.discipline], m.city, m.duration].filter(Boolean);
+    return (
+      '<article class="n-rise group flex cursor-pointer flex-col rounded-2xl border border-white/[0.08] bg-mineral p-4 transition duration-300 hover:border-white/20" data-mission="' + esc(m.id) + '">' +
+        '<div class="flex items-start justify-between gap-3">' +
+          '<div class="min-w-0">' +
+            '<p class="text-sm font-bold leading-snug text-white">' + esc(m.title) + "</p>" +
+            '<p class="mt-1 text-[11px] text-white/40">' + esc(m.venue) + " · " + esc(longDate(m.date)) + (m.time ? " · " + esc(m.time) : "") + "</p>" +
+          "</div>" +
+          (m.urgent
+            ? '<span class="shrink-0 rounded-full border border-white/15 bg-white/[0.06] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-white/75">Urgent</span>'
+            : "") +
+        "</div>" +
+        '<p class="mt-3 line-clamp-2 text-xs leading-relaxed text-white/55">' + esc(m.description) + "</p>" +
+        '<div class="mt-3 flex flex-wrap gap-1.5">' +
+          tags.map((t) => '<span class="rounded-md border border-white/[0.08] bg-white/[0.03] px-2 py-1 text-[11px] font-medium text-white/50">' + esc(t) + "</span>").join("") +
+        "</div>" +
+        '<div class="mt-4 flex items-end justify-between gap-3 border-t border-white/[0.06] pt-3.5">' +
+          "<div>" +
+            '<p class="text-sm"><span class="font-bold text-white">' + esc(eur(m.budget)) + " net</span> " +
+            '<span class="text-xs text-neon-cyan">· 0% com</span></p>' +
+            '<p class="mt-0.5 text-[11px] text-white/35"><span class="font-mono">' + Number(m.applicants || 0) + "</span> candidatures</p>" +
+          "</div>" +
+          '<span class="inline-flex items-center gap-1 text-[11px] font-semibold text-white/50 transition group-hover:text-white">Voir la mission<i data-lucide="arrow-up-right" class="h-3.5 w-3.5"></i></span>' +
+        "</div>" +
+      "</article>"
+    );
+  }
+
+  function visibleMissions() {
+    const f = state.ui.missionFilter;
+    return state.missions
+      .filter((m) => f === "all" || m.discipline === f)
+      .sort((a, b) => (b.urgent ? 1 : 0) - (a.urgent ? 1 : 0) || String(a.date).localeCompare(String(b.date)));
+  }
+
+  function renderMissions() {
+    renderMissionFilters();
+    const items = visibleMissions();
+    $("#mission-list").innerHTML = items.map(missionCard).join("");
+    $("#mission-empty").classList.toggle("hidden", items.length > 0);
+    $("#mission-count").textContent = state.missions.length;
+    $("#side-missions").textContent = state.missions.length;
+    refreshIcons();
+  }
+
+  $("#mission-filters").addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-capsule]");
+    if (!btn) return;
+    state.ui.missionFilter = btn.dataset.capsule;
+    saveState();
+    renderMissions();
+  });
+
+  $("#mission-list").addEventListener("click", (e) => {
+    const card = e.target.closest("[data-mission]");
+    if (!card) return;
+    openMissionSheet(card.dataset.mission);
+  });
+
+  function openMissionSheet(id) {
+    const m = state.missions.filter((x) => x.id === id)[0];
+    if (!m) return;
+    const rows = [
+      ["Métier", DISCIPLINE_LABEL[m.discipline]],
+      ["Lieu", m.venue + " · " + m.city],
+      ["Date", longDate(m.date) + (m.time ? " · " + m.time : "")],
+      ["Durée", m.duration || "À définir"],
+      ["Cachet net", eur(m.budget)],
+      ["Commission", "0 %"],
+    ];
+
+    $("#mission-sheet-body").innerHTML =
+      '<div class="border-b border-white/[0.06] px-5 py-5 pr-14">' +
+        '<p class="text-[10px] font-bold uppercase tracking-[0.14em] text-white/35">Mission ' + (m.urgent ? "urgente" : "ouverte") + "</p>" +
+        '<h3 class="mt-2 text-lg font-bold leading-snug text-white">' + esc(m.title) + "</h3>" +
+        '<p class="mt-1 text-xs text-white/45">' + esc(m.venue) + " · " + esc(m.city) + "</p>" +
+      "</div>" +
+      '<div class="px-5 py-5">' +
+        '<dl class="divide-y divide-white/[0.05] rounded-xl border border-white/[0.07]">' +
+          rows.map(
+            (r) =>
+              '<div class="flex items-baseline justify-between gap-4 px-3.5 py-2.5">' +
+              '<dt class="text-[11px] text-white/40">' + esc(r[0]) + "</dt>" +
+              '<dd class="text-right text-xs font-medium ' + (r[0] === "Commission" ? "text-neon-cyan" : "text-white/85") + '">' + esc(r[1]) + "</dd></div>"
+          ).join("") +
+        "</dl>" +
+        '<p class="mt-4 text-[10px] font-bold uppercase tracking-[0.14em] text-white/35">Brief</p>' +
+        '<p class="mt-2 whitespace-pre-line text-xs leading-relaxed text-white/65">' + esc(m.description) + "</p>" +
+        '<div class="mt-5 flex gap-2">' +
+          '<button type="button" data-mission-apply="' + esc(m.id) + '" class="flex-1 rounded-xl bg-white py-3 text-xs font-bold text-black transition hover:scale-[1.02] active:scale-100">Postuler</button>' +
+          (m.own
+            ? '<button type="button" data-mission-delete="' + esc(m.id) + '" class="rounded-xl border border-white/10 px-4 py-3 text-xs font-semibold text-white/60 transition hover:border-white/25 hover:text-white">Retirer</button>'
+            : '<button type="button" data-tab="talents" class="rounded-xl border border-white/10 px-4 py-3 text-xs font-semibold text-white/60 transition hover:border-white/25 hover:text-white">Voir le roster</button>') +
+        "</div>" +
+      "</div>";
+
+    openOverlay("mission-sheet");
+  }
+
+  $("#mission-sheet").addEventListener("click", (e) => {
+    const apply = e.target.closest("[data-mission-apply]");
+    if (apply) {
+      if (!state.user) { closeOverlay("mission-sheet"); openOnboarding(); return; }
+      const m = state.missions.filter((x) => x.id === apply.dataset.missionApply)[0];
+      if (m) { m.applicants = Number(m.applicants || 0) + 1; saveState(); renderMissions(); }
+      closeOverlay("mission-sheet");
+      toast("Candidature envoyée. L'organisateur reçoit votre profil.", "cyan");
+      return;
+    }
+    const del = e.target.closest("[data-mission-delete]");
+    if (del) {
+      state.missions = state.missions.filter((x) => x.id !== del.dataset.missionDelete);
+      saveState();
+      renderMissions();
+      closeOverlay("mission-sheet");
+      toast("Mission retirée.");
+    }
+  });
+
+  $("#mission-new").addEventListener("click", () => {
+    if (!state.user) { openOnboarding(); return; }
+    const form = $("#mission-form");
+    form.reset();
+    $("#mission-date").value = nextSaturday();
+    $("#mission-time").value = "23:00";
+    if (state.user.role === "organisateur") {
+      $("#mission-venue").value = state.user.structure || "";
+      $("#mission-city").value = state.user.city || "";
+    } else {
+      $("#mission-city").value = state.user.city || "";
+    }
+    openOverlay("mission-modal");
+  });
+
+  $("#mission-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const mission = {
+      id: uid("m"), own: true, applicants: 0,
+      title: $("#mission-title").value.trim(),
+      discipline: $("#mission-discipline").value,
+      city: $("#mission-city").value.trim(),
+      venue: $("#mission-venue").value.trim(),
+      date: $("#mission-date").value,
+      time: $("#mission-time").value,
+      duration: "À définir",
+      budget: Number($("#mission-budget").value) || 0,
+      description: $("#mission-desc").value.trim() || "Brief à préciser avec l'organisateur.",
+      urgent: $("#mission-urgent").checked,
+    };
+    state.missions.unshift(mission);
+    saveState();
+    renderMissions();
+    closeOverlay("mission-modal");
+    setTab("annonces");
+    toast("Mission publiée. Les talents peuvent postuler.", "cyan");
+  });
+
+  /* ══════════════════════════════════════════════════════════
+     11. TALENTS — ROSTER DARK LUXURY
+     ─────────────────────────────────────────────────────────
+     TALENTS · DÉBUT DU BLOC REMPLAÇABLE
+     Dépendances externes au bloc : $, $$, esc, eur, initials,
+     state, saveState, refreshIcons, openOverlay, closeOverlay,
+     openBookingDrawer, openProfileModal, DISCIPLINE_FILTERS,
+     DISCIPLINE_LABEL, UNIT_LABEL, JOB_NOUN.
+     ══════════════════════════════════════════════════════ */
+  function talentJobs(t) {
+    return Number(t.jobs || 0) + " " + (JOB_NOUN[t.discipline] || "missions");
+  }
+
+  function talentRate(t) {
+    return eur(t.rate) + " / " + (UNIT_LABEL[t.unit] || t.unit || "set");
+  }
+
+  function talentVisual(t) {
+    if (t.image) {
+      return (
+        '<img src="' + esc(t.image) + '" alt="" loading="lazy" ' +
+        'class="h-full w-full object-cover opacity-90 saturate-[0.85] transition duration-700 ease-out group-hover:scale-[1.05] group-hover:opacity-100" ' +
+        'onerror="this.style.display=\'none\'" />'
+      );
+    }
+    return (
+      '<span class="absolute inset-0 grid place-items-center">' +
+      '<span class="font-display text-4xl font-bold tracking-tight text-white/[0.14]">' + esc(initials(t.name)) + "</span></span>"
+    );
+  }
+
+  function talentCard(t) {
+    const availableLabel = t.status === "available" ? "Disponible" : "En tournée";
+    const dot = t.status === "available" ? "bg-neon-cyan animate-pulse-soft" : "bg-white/40";
+    const ratingBadge = t.rating
+      ? t.rating.toFixed(1) + " · " + talentJobs(t)
+      : "Nouveau profil";
+
+    const action = t.own
+      ? '<button type="button" data-talent-edit="' + esc(t.id) + '" class="shrink-0 rounded-xl border border-white/20 px-4 py-2 text-xs font-bold text-white transition hover:scale-105 active:scale-100">Modifier</button>'
+      : '<button type="button" data-book="' + esc(t.id) + '" class="shrink-0 rounded-xl bg-white px-4 py-2 text-xs font-bold text-black transition hover:scale-105 active:scale-100">Booker</button>';
+
+    return (
+      '<article class="n-rise group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-mineral transition duration-300 hover:border-white/20" ' +
+        'data-talent="' + esc(t.id) + '" tabindex="0" role="button" aria-label="Ouvrir la fiche de ' + esc(t.name) + '">' +
+
+        '<div class="relative aspect-[16/10] overflow-hidden bg-gradient-to-br from-white/[0.05] to-transparent">' +
+          talentVisual(t) +
+          '<span class="pointer-events-none absolute inset-0 bg-gradient-to-t from-mineral via-mineral/20 to-transparent"></span>' +
+          '<span class="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/60 px-2.5 py-1 text-[11px] font-medium text-white/85 backdrop-blur-md">' +
+            '<span class="h-1.5 w-1.5 rounded-full ' + dot + '"></span>' + esc(availableLabel) +
+          "</span>" +
+          '<span class="absolute right-3 top-3 rounded-full border border-white/10 bg-black/60 px-2.5 py-1 font-mono text-xs text-white/80 backdrop-blur-md">' + esc(ratingBadge) + "</span>" +
+          (t.own
+            ? '<span class="absolute bottom-3 left-3 rounded-full border border-white/15 bg-black/60 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-white/75 backdrop-blur-md">Votre profil</span>'
+            : "") +
+        "</div>" +
+
+        '<div class="flex flex-1 flex-col px-4 pb-4">' +
+          '<h3 class="mt-3 font-display text-lg font-bold leading-tight text-white">' + esc(t.name) + "</h3>" +
+          '<p class="mt-1 text-xs leading-relaxed text-white/60">' + esc(t.specialty) + "</p>" +
+          '<div class="mt-3 flex flex-wrap gap-1.5">' +
+            (t.gear || []).slice(0, 3).map(
+              (g) => '<span class="rounded-md border border-white/[0.08] bg-white/[0.03] px-2 py-1 text-[11px] font-medium text-white/50">' + esc(g) + "</span>"
+            ).join("") +
+          "</div>" +
+          '<div class="mt-4 flex items-end justify-between gap-3 border-t border-white/[0.06] pt-3.5">' +
+            "<div>" +
+              '<p class="text-sm"><span class="font-bold text-white">' + esc(talentRate(t)) + "</span> " +
+              '<span class="text-xs text-neon-cyan">· 0% com</span></p>' +
+              '<p class="mt-0.5 text-[11px] text-white/35">' + esc(t.city) + " · " + esc(DISCIPLINE_LABEL[t.discipline]) + "</p>" +
+            "</div>" +
+            action +
+          "</div>" +
+        "</div>" +
+      "</article>"
+    );
+  }
+
+  /** Capsule de filtre en texte pur, propre au roster. */
+  function talentCapsule(id, label, active) {
+    const base = "shrink-0 whitespace-nowrap rounded-full py-1.5 px-3.5 text-xs transition duration-200";
+    const skin = active
+      ? "bg-white/15 border border-white/25 text-white font-semibold"
+      : "bg-transparent border border-white/10 text-white/50 font-medium hover:border-white/20 hover:text-white/80";
+    return (
+      '<button type="button" role="tab" aria-selected="' + (active ? "true" : "false") + '" ' +
+      'data-talent-filter="' + esc(id) + '" class="' + base + " " + skin + '">' + esc(label) + "</button>"
+    );
+  }
+
+  function renderTalentFilters() {
+    $("#talent-filters").innerHTML = DISCIPLINE_FILTERS.map((f) => talentCapsule(f.id, f.label, state.ui.talentFilter === f.id)).join("");
+  }
+
+  function renderTalentCities() {
+    const select = $("#talent-city");
+    const cities = state.talents.map((t) => t.city).filter(Boolean);
+    const unique = cities.filter((c, i) => cities.indexOf(c) === i).sort((a, b) => a.localeCompare(b, "fr"));
+    const current = state.ui.talentCity;
+    select.innerHTML =
+      '<option value="all">Toutes les villes</option>' +
+      unique.map((c) => '<option value="' + esc(c) + '">' + esc(c) + "</option>").join("");
+    select.value = unique.indexOf(current) === -1 ? "all" : current;
+    state.ui.talentCity = select.value;
+  }
+
+  function visibleTalents() {
+    const filter = state.ui.talentFilter;
+    const city = state.ui.talentCity;
+    const query = state.ui.talentQuery.trim().toLowerCase();
+
+    return state.talents
+      .filter((t) => filter === "all" || t.discipline === filter)
+      .filter((t) => city === "all" || t.city === city)
+      .filter((t) => {
+        if (!query) return true;
+        const haystack = [t.name, t.specialty, t.city, DISCIPLINE_LABEL[t.discipline]].concat(t.gear || []).join(" ").toLowerCase();
+        return haystack.indexOf(query) !== -1;
+      })
+      .sort((a, b) => {
+        if (a.own !== b.own) return a.own ? -1 : 1;
+        if ((a.status === "available") !== (b.status === "available")) return a.status === "available" ? -1 : 1;
+        return Number(b.rating || 0) - Number(a.rating || 0);
+      });
+  }
+
+  function renderTalents() {
+    renderTalentFilters();
+    renderTalentCities();
+    const items = visibleTalents();
+    $("#talents-grid").innerHTML = items.map(talentCard).join("");
+    $("#talents-empty").classList.toggle("hidden", items.length > 0);
+    $("#talent-count").textContent = items.length;
+    $("#side-talents").textContent = state.talents.length;
+    refreshIcons();
+  }
+
+  $("#talent-filters").addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-talent-filter]");
+    if (!btn) return;
+    state.ui.talentFilter = btn.dataset.talentFilter;
+    saveState();
+    renderTalents();
+  });
+
+  let searchTimer = null;
+  $("#talent-search").addEventListener("input", (e) => {
+    const value = e.target.value;
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+      state.ui.talentQuery = value;
+      renderTalents();
+    }, 130);
+  });
+
+  $("#talent-city").addEventListener("change", (e) => {
+    state.ui.talentCity = e.target.value;
+    saveState();
+    renderTalents();
+  });
+
+  $("#talents-grid").addEventListener("click", (e) => {
+    const bookBtn = e.target.closest("[data-book]");
+    if (bookBtn) { e.stopPropagation(); openBookingDrawer(bookBtn.dataset.book); return; }
+
+    const editBtn = e.target.closest("[data-talent-edit]");
+    if (editBtn) { e.stopPropagation(); openProfileModal(); return; }
+
+    const card = e.target.closest("[data-talent]");
+    if (card) openTalentSheet(card.dataset.talent);
+  });
+
+  $("#talents-grid").addEventListener("keydown", (e) => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    const card = e.target.closest("[data-talent]");
+    if (!card) return;
+    e.preventDefault();
+    openTalentSheet(card.dataset.talent);
+  });
+
+  /* ── Fiche Talent / Rider B2B ───────────────────────────── */
+  function openTalentSheet(id) {
+    const t = state.talents.filter((x) => x.id === id)[0];
+    if (!t) return;
+
+    const stats = [
+      ["Note", t.rating ? t.rating.toFixed(1) + " / 5" : "—"],
+      ["Missions", String(t.jobs || 0)],
+      ["Réponse", (t.responseRate || 0) + " %"],
+      ["Expérience", t.experience || "—"],
+    ];
+
+    const hero = t.image
+      ? '<img src="' + esc(t.image) + '" alt="" class="h-full w-full object-cover opacity-90 saturate-[0.85]" onerror="this.style.display=\'none\'" />'
+      : '<span class="absolute inset-0 grid place-items-center"><span class="font-display text-6xl font-bold text-white/[0.12]">' + esc(initials(t.name)) + "</span></span>";
+
+    const block = (title, inner) =>
+      '<p class="mt-6 text-[10px] font-bold uppercase tracking-[0.14em] text-white/35">' + esc(title) + "</p>" + inner;
+
+    const rider = (t.rider || []).length
+      ? '<ul class="mt-2.5 space-y-2">' +
+        t.rider.map(
+          (r) =>
+            '<li class="flex gap-2.5 text-xs leading-relaxed text-white/65">' +
+            '<i data-lucide="minus" class="mt-1 h-3 w-3 shrink-0 text-white/25"></i><span>' + esc(r) + "</span></li>"
+        ).join("") +
+        "</ul>"
+      : '<p class="mt-2 text-xs text-white/40">Rider non renseigné.</p>';
+
+    const chips = (items) =>
+      '<div class="mt-2.5 flex flex-wrap gap-1.5">' +
+      (items || []).map((g) => '<span class="rounded-md border border-white/[0.08] bg-white/[0.03] px-2 py-1 text-[11px] font-medium text-white/55">' + esc(g) + "</span>").join("") +
+      "</div>";
+
+    const slots =
+      '<div class="mt-2.5 grid grid-cols-3 gap-2">' +
+      (t.slots || []).map(
+        (s) =>
+          '<div class="rounded-xl border border-white/[0.07] bg-white/[0.02] px-3 py-2.5 text-center">' +
+          '<p class="text-[11px] font-semibold text-white/70">' + esc(s.label) + "</p>" +
+          '<p class="mt-0.5 text-[10px] ' + (s.state === "Libre" ? "text-neon-cyan" : "text-white/35") + '">' + esc(s.state) + "</p></div>"
+      ).join("") +
+      "</div>";
+
+    const footerAction = t.own
+      ? '<button type="button" data-sheet-edit class="rounded-xl border border-white/20 px-5 py-2.5 text-xs font-bold text-white transition hover:scale-105 active:scale-100">Modifier</button>'
+      : '<button type="button" data-sheet-book="' + esc(t.id) + '" class="rounded-xl bg-white px-5 py-2.5 text-xs font-bold text-black transition hover:scale-105 active:scale-100">Booker</button>';
+
+    $("#talent-sheet-body").innerHTML =
+      '<div class="relative aspect-[16/9] overflow-hidden bg-gradient-to-br from-white/[0.05] to-transparent">' +
+        hero +
+        '<span class="pointer-events-none absolute inset-0 bg-gradient-to-t from-mineral via-mineral/25 to-transparent"></span>' +
+        '<span class="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/60 px-2.5 py-1 text-[11px] font-medium text-white/85 backdrop-blur-md">' +
+          '<span class="h-1.5 w-1.5 rounded-full ' + (t.status === "available" ? "bg-neon-cyan animate-pulse-soft" : "bg-white/40") + '"></span>' +
+          (t.status === "available" ? "Disponible" : "En tournée") +
+        "</span>" +
+        '<div class="absolute bottom-4 left-4 right-4">' +
+          '<h3 id="sheet-name" class="font-display text-2xl font-bold leading-tight text-white">' + esc(t.name) + "</h3>" +
+          '<p class="mt-1 text-xs text-white/60">' + esc(t.specialty) + "</p>" +
+        "</div>" +
+      "</div>" +
+
+      '<div class="px-5 pb-28 pt-5 sm:px-6">' +
+        '<div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-white/45">' +
+          '<span class="font-medium text-white/70">' + esc(DISCIPLINE_LABEL[t.discipline]) + "</span><span>·</span>" +
+          "<span>" + esc(t.city) + "</span><span>·</span>" +
+          "<span>" + esc(t.radius || "Zone à préciser") + "</span>" +
+        "</div>" +
+
+        '<dl class="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">' +
+          stats.map(
+            (s) =>
+              '<div class="rounded-xl border border-white/[0.07] bg-white/[0.02] px-3 py-2.5">' +
+              '<dt class="text-[10px] uppercase tracking-[0.08em] text-white/35">' + esc(s[0]) + "</dt>" +
+              '<dd class="mt-1 font-mono text-sm text-white/85">' + esc(s[1]) + "</dd></div>"
+          ).join("") +
+        "</dl>" +
+
+        block("Présentation", '<p class="mt-2 whitespace-pre-line text-xs leading-relaxed text-white/70">' + esc(t.bio) + "</p>") +
+        block("Rider technique", rider) +
+        block("Matériel", chips(t.gear)) +
+        block("Disponibilités", slots) +
+        block("Langues", chips(t.languages)) +
+        ((t.references || []).length ? block("Références", chips(t.references)) : "") +
+      "</div>" +
+
+      '<div class="sticky bottom-0 flex items-center justify-between gap-4 border-t border-white/[0.06] bg-mineral/95 px-5 py-4 backdrop-blur-xl sm:px-6">' +
+        "<div>" +
+          '<p class="text-sm"><span class="font-bold text-white">' + esc(talentRate(t)) + '</span> <span class="text-xs text-neon-cyan">· 0% com</span></p>' +
+          '<p class="mt-0.5 text-[11px] text-white/35">Cachet net garanti, versé au talent</p>' +
+        "</div>" +
+        footerAction +
+      "</div>";
+
+    openOverlay("talent-sheet");
+  }
+
+  $("#talent-sheet").addEventListener("click", (e) => {
+    const book = e.target.closest("[data-sheet-book]");
+    if (book) { closeOverlay("talent-sheet"); openBookingDrawer(book.dataset.sheetBook); return; }
+    if (e.target.closest("[data-sheet-edit]")) { closeOverlay("talent-sheet"); openProfileModal(); }
+  });
+  /* ═══════════ TALENTS · FIN DU BLOC REMPLAÇABLE ═══════════ */
+
+  /* ══════════════════════════════════════════════════════════
+     12. BOOKING DRAWER
+     ══════════════════════════════════════════════════════ */
+  function openBookingDrawer(talentId) {
+    const t = state.talents.filter((x) => x.id === talentId)[0];
+    if (!t) return;
+    bookingTarget = t;
+
+    $("#drawer-title").textContent = t.name;
+    $("#drawer-subtitle").textContent = DISCIPLINE_LABEL[t.discipline] + " · " + t.specialty;
+    $("#drawer-rate").textContent = talentRate(t);
+    $("#booking-fee").value = t.rate;
+    $("#booking-fee-hint").textContent = "Référence du talent : " + talentRate(t) + ".";
+    $("#booking-date").value = nextSaturday();
+    $("#booking-time").value = t.discipline === "dj" ? "23:00" : "20:00";
+    $("#booking-city").value = (state.user && state.user.city) || t.city;
+    $("#booking-venue").value = (state.user && state.user.structure) || "";
+    $("#booking-duration").value = t.unit === "h" ? "4 h" : "3 h";
+    $("#booking-message").value =
+      "Bonjour " + t.name.split(" ")[0] + ",\n\n" +
+      "Nous souhaitons vous programmer sur une date à venir. " +
+      "Le cachet net de " + talentRate(t) + " est confirmé, sans commission NIGHTLY.\n\n" +
+      "Dites-nous si le créneau vous convient.";
+
+    openOverlay("booking-drawer");
+    setTimeout(() => $("#booking-venue").focus(), 260);
+  }
+
+  $("#booking-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (!bookingTarget) return;
+    const booking = {
+      id: uid("b"),
+      talentId: bookingTarget.id,
+      talentName: bookingTarget.name,
+      discipline: bookingTarget.discipline,
+      date: $("#booking-date").value,
+      time: $("#booking-time").value,
+      city: $("#booking-city").value.trim(),
+      venue: $("#booking-venue").value.trim(),
+      duration: $("#booking-duration").value,
+      fee: Number($("#booking-fee").value) || bookingTarget.rate,
+      message: $("#booking-message").value.trim(),
+      status: "Envoyée",
+      ts: Date.now(),
+    };
+    state.bookings.unshift(booking);
+    saveState();
+    renderBookings();
+    closeOverlay("booking-drawer");
+    toast("Demande envoyée à " + booking.talentName + ". Réponse attendue sous 24 h.", "cyan");
+    bookingTarget = null;
+  });
+
+  function renderBookings() {
+    const list = $("#booking-list");
+    const items = state.bookings;
+    $("#booking-count").textContent = items.length;
+    $("#booking-empty").classList.toggle("hidden", items.length > 0);
+    list.innerHTML = items
+      .map(
+        (b) =>
+          '<div class="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3.5">' +
+            '<div class="flex items-start justify-between gap-3">' +
+              "<div class='min-w-0'>" +
+                '<p class="font-display text-sm font-bold text-white">' + esc(b.talentName) + "</p>" +
+                '<p class="mt-0.5 text-[11px] text-white/45">' + esc(b.venue || "Lieu à préciser") + " · " + esc(b.city) + " · " + esc(shortDate(b.date)) + (b.time ? " · " + esc(b.time) : "") + "</p>" +
+              "</div>" +
+              '<span class="shrink-0 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-white/60">' + esc(b.status) + "</span>" +
+            "</div>" +
+            '<div class="mt-3 flex items-center justify-between gap-3 border-t border-white/[0.06] pt-2.5">' +
+              '<p class="text-xs"><span class="font-bold text-white">' + esc(eur(b.fee)) + " net</span> " +
+              '<span class="text-[11px] text-neon-cyan">· 0% com</span></p>' +
+              '<button type="button" data-booking-cancel="' + esc(b.id) + '" class="text-[11px] font-semibold text-white/35 transition hover:text-white">Annuler</button>' +
+            "</div>" +
+          "</div>"
+      )
+      .join("");
+    refreshIcons();
+  }
+
+  $("#booking-list").addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-booking-cancel]");
+    if (!btn) return;
+    state.bookings = state.bookings.filter((b) => b.id !== btn.dataset.bookingCancel);
+    saveState();
+    renderBookings();
+    toast("Demande annulée.");
+  });
+
+  /* ══════════════════════════════════════════════════════════
+     13. PROFIL
+     ══════════════════════════════════════════════════════ */
+  function openProfileModal() {
+    if (!state.user) { openOnboarding(); return; }
+    const isTalent = state.user.role === "talent";
+    const own = ownTalent();
+
+    $("#profile-name").value = state.user.name || "";
+    $("#profile-city").value = state.user.city || "";
+    $("#profile-status").value = own ? own.status : "available";
+    $("#profile-talent-only").classList.toggle("hidden", !isTalent);
+
+    if (isTalent && own) {
+      $("#profile-specialty").value = own.specialty || "";
+      $("#profile-rate").value = own.rate || "";
+      $("#profile-unit").value = own.unit || "set";
+      $("#profile-gear").value = (own.gear || []).join(", ");
+    }
+    openOverlay("profile-modal");
+  }
+
+  $("#pass-edit").addEventListener("click", openProfileModal);
+
+  $("#profile-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (!state.user) return;
+    const name = $("#profile-name").value.trim();
+    const city = $("#profile-city").value.trim();
+    if (name.length < 2 || !city) { toast("Nom et ville sont requis."); return; }
+
+    state.user.name = name;
+    state.user.city = city;
+
+    const own = ownTalent();
+    if (own) {
+      own.name = name;
+      own.city = city;
+      own.status = $("#profile-status").value;
+      own.specialty = $("#profile-specialty").value.trim() || own.specialty;
+      own.rate = Number($("#profile-rate").value) || own.rate;
+      own.unit = $("#profile-unit").value;
+      const gear = splitList($("#profile-gear").value);
+      own.gear = gear.length ? gear : own.gear;
+      own.radius = city + " et alentours";
+    }
+
+    saveState();
+    closeOverlay("profile-modal");
+    renderAll();
+    toast("Profil mis à jour.", "cyan");
+  });
+
+  $("#profile-reset").addEventListener("click", () => {
+    try { localStorage.removeItem(STORAGE_KEY); } catch (err) { /* stockage indisponible */ }
+    state = defaultState();
+    closeOverlay("profile-modal");
+    renderAll();
+    setTab("talents");
+    openOnboarding();
+    toast("Données locales réinitialisées.");
+  });
+
+  /* ══════════════════════════════════════════════════════════
+     14. PASS QR
+     ══════════════════════════════════════════════════════ */
+  function newPassCode() {
+    const chunk = () => Math.random().toString(16).slice(2, 6).toUpperCase();
+    return "NGH-" + chunk() + "-" + chunk();
+  }
+
+  function hashString(str) {
+    let h = 2166136261;
+    for (let i = 0; i < str.length; i++) {
+      h ^= str.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return h >>> 0;
+  }
+
+  /** Matrice QR réelle si la librairie est chargée, motif déterministe sinon. */
+  function passMatrix(payload) {
+    if (typeof window.qrcode === "function") {
+      try {
+        const qr = window.qrcode(0, "M");
+        qr.addData(payload);
+        qr.make();
+        const n = qr.getModuleCount();
+        const matrix = [];
+        for (let r = 0; r < n; r++) {
+          const row = [];
+          for (let c = 0; c < n; c++) row.push(!!qr.isDark(r, c));
+          matrix.push(row);
+        }
+        return matrix;
+      } catch (err) { /* repli sur le motif déterministe */ }
+    }
+
+    const size = 29;
+    let seed = hashString(payload);
+    const rand = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+    const matrix = [];
+    for (let r = 0; r < size; r++) {
+      const row = [];
+      for (let c = 0; c < size; c++) row.push(rand() > 0.52);
+      matrix.push(row);
+    }
+    const finder = (or, oc) => {
+      for (let r = 0; r < 7; r++) {
+        for (let c = 0; c < 7; c++) {
+          const edge = r === 0 || r === 6 || c === 0 || c === 6;
+          const core = r >= 2 && r <= 4 && c >= 2 && c <= 4;
+          matrix[or + r][oc + c] = edge || core;
+        }
+      }
+      for (let r = -1; r < 8; r++) {
+        for (let c = -1; c < 8; c++) {
+          const rr = or + r, cc = oc + c;
+          if (rr < 0 || cc < 0 || rr >= size || cc >= size) continue;
+          if (r === -1 || r === 7 || c === -1 || c === 7) matrix[rr][cc] = false;
+        }
+      }
+    };
+    finder(0, 0);
+    finder(0, size - 7);
+    finder(size - 7, 0);
+    return matrix;
+  }
+
+  function drawPass(payload) {
+    const canvas = $("#pass-qr");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const matrix = passMatrix(payload);
+    const modules = matrix.length;
+    const quiet = 2;
+    const total = modules + quiet * 2;
+    const dpr = window.devicePixelRatio || 1;
+    const cssSize = 184;
+
+    canvas.width = Math.round(cssSize * dpr);
+    canvas.height = Math.round(cssSize * dpr);
+    const scale = canvas.width / total;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#ffffff";
+    for (let r = 0; r < modules; r++) {
+      for (let c = 0; c < modules; c++) {
+        if (!matrix[r][c]) continue;
+        const x = (c + quiet) * scale;
+        const y = (r + quiet) * scale;
+        const s = Math.ceil(scale);
+        ctx.fillRect(Math.floor(x), Math.floor(y), s, s);
+      }
+    }
+  }
+
+  function renderPass() {
+    const user = state.user;
+    const codeEl = $("#pass-code");
+
+    if (!user) {
+      codeEl.textContent = "NGH-••••-••••";
+      $("#pass-holder").textContent = "Profil à compléter";
+      $("#pass-meta").textContent = "Créez votre profil pour activer le pass";
+      $("#pass-status").textContent = "Inactif";
+      $("#pass-tier").textContent = "Visiteur";
+      $("#pass-valid").textContent = "—";
+      $("#pass-since").textContent = "—";
+      drawPass("nightly://pass/inactive");
+      renderBookings();
+      refreshIcons();
+      return;
+    }
+
+    if (!user.pass) user.pass = newPassCode();
+    const own = ownTalent();
+    const validUntil = new Date();
+    validUntil.setMonth(validUntil.getMonth() + 12);
+
+    codeEl.textContent = user.pass;
+    $("#pass-holder").textContent = user.name;
+    $("#pass-meta").textContent = user.role === "talent"
+      ? DISCIPLINE_LABEL[user.discipline] + (own ? " · " + own.specialty : "") + " · " + user.city
+      : (user.structure || "Organisateur") + " · " + (user.venueType || "Lieu") + " · " + user.city;
+    $("#pass-status").textContent = own && own.status === "touring" ? "En tournée" : "Actif";
+    $("#pass-tier").textContent = user.role === "talent" ? "Talent" : "Organisateur";
+    $("#pass-valid").textContent = validUntil.toLocaleDateString("fr-FR", { month: "2-digit", year: "numeric" });
+    $("#pass-since").textContent = new Date(user.since || Date.now()).toLocaleDateString("fr-FR", { month: "2-digit", year: "2-digit" });
+
+    drawPass("nightly://pass/" + user.pass + "?holder=" + encodeURIComponent(user.name));
+    renderBookings();
+    refreshIcons();
+  }
+
+  $("#pass-regen").addEventListener("click", () => {
+    if (!state.user) { openOnboarding(); return; }
+    state.user.pass = newPassCode();
+    saveState();
+    renderPass();
+    toast("Nouveau code de pass généré.", "cyan");
+  });
+
+  /* ══════════════════════════════════════════════════════════
+     15. INITIALISATION
+     ══════════════════════════════════════════════════════ */
+  function renderAll() {
+    renderIdentity();
+    renderFeed();
+    renderMissions();
+    renderTalents();
+    renderPass();
+    syncComposer();
+    refreshIcons();
+  }
+
+  function init() {
+    loadState();
+
+    $("#onb-city").innerHTML = CITIES.map((c) => '<option value="' + esc(c) + '">' + esc(c) + "</option>").join("");
+    $("#talent-search").value = state.ui.talentQuery || "";
+
+    renderAll();
+    setTab(state.ui.tab || "talents");
+
+    if (!state.onboarded) openOnboarding();
+    refreshIcons();
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+  else init();
+})();
+</script>
+</body>
+</html>
