@@ -1727,7 +1727,9 @@
         '<div class="flex flex-1 flex-col px-4 pb-4">' +
           '<h3 class="mt-3 font-display text-lg font-bold leading-tight text-white">' + esc(t.name) + "</h3>" +
           '<p class="mt-1 text-xs leading-relaxed text-white/60">' + esc(t.specialty) + "</p>" +
-          '<div class="mt-3 flex flex-wrap gap-1.5">' +
+          // flex-1 absorbe le débordement des capsules de matériel : les tarifs
+          // et les boutons Booker restent alignés sur toute une rangée du roster.
+          '<div class="mt-3 flex flex-1 flex-wrap content-start gap-1.5">' +
             (t.gear || []).slice(0, 3).map(
               (g) => '<span class="rounded-md border border-white/[0.08] bg-white/[0.03] px-2 py-1 text-[11px] font-medium text-white/50">' + esc(g) + "</span>"
             ).join("") +
