@@ -4,14 +4,13 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#07070a" />
-<meta name="description" content="NIGHTLY — l'infrastructure B2B de la nuit. Feed, missions, roster de talents et pass d'accès, sans commission." />
+<meta name="description" content="NIGHTLY — l'infrastructure B2B de la nuit. Feed, missions et roster de talents, sans commission." />
 <title>NIGHTLY · L'infrastructure B2B de la nuit</title>
 <link rel="icon" href="data:," />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 <script>
   tailwind.config = {
     darkMode: "class",
@@ -122,7 +121,6 @@
       <button type="button" data-tab="feed" class="nav-desktop rounded-full px-3.5 py-1.5 text-xs font-medium transition">Feed</button>
       <button type="button" data-tab="annonces" class="nav-desktop rounded-full px-3.5 py-1.5 text-xs font-medium transition">Annonces</button>
       <button type="button" data-tab="talents" class="nav-desktop rounded-full px-3.5 py-1.5 text-xs font-medium transition">Talents</button>
-      <button type="button" data-tab="pass" class="nav-desktop rounded-full px-3.5 py-1.5 text-xs font-medium transition">Pass</button>
     </nav>
 
     <div class="ml-auto flex items-center gap-2 md:ml-3">
@@ -229,8 +227,8 @@
 
   <!-- ══════════════════════════════════════════════════════════
        TALENTS · DÉBUT DU BLOC REMPLAÇABLE
-       Bloc autonome : aucune dépendance vers le Feed, les Annonces
-       ou le Pass. Remplaçable d'un seul tenant jusqu'au marqueur
+       Bloc autonome : aucune dépendance vers le Feed ni les Annonces.
+       Remplaçable d'un seul tenant jusqu'au marqueur
        « TALENTS · FIN DU BLOC REMPLAÇABLE ».
        ══════════════════════════════════════════════════════════ -->
   <section id="talents-section" class="tab-panel hidden" data-panel="talents">
@@ -261,71 +259,25 @@
     <!-- Roster -->
     <div id="talents-grid" class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"></div>
     <p id="talents-empty" class="hidden rounded-2xl border border-dashed border-white/10 py-14 text-center text-xs text-white/40">Aucun talent ne correspond à cette recherche.</p>
+
+    <!-- Demandes envoyées depuis le Booking Drawer, masqué tant qu'il n'y en a aucune -->
+    <div id="booking-panel" class="mt-8 hidden rounded-2xl border border-white/[0.08] bg-mineral p-5">
+      <div class="flex items-center justify-between gap-3">
+        <p class="text-[10px] font-bold uppercase tracking-[0.14em] text-white/35">Mes demandes de booking</p>
+        <span id="booking-count" class="font-mono text-xs text-white/50">0</span>
+      </div>
+      <div id="booking-list" class="mt-4 space-y-3"></div>
+    </div>
   </section>
   <!-- ═══════════ TALENTS · FIN DU BLOC REMPLAÇABLE ═══════════ -->
 
-  <!-- ────────────────────────── PASS ──────────────────────── -->
-  <section id="pass-section" class="tab-panel hidden" data-panel="pass">
-    <div class="flex flex-wrap items-end justify-between gap-4">
-      <div>
-        <h2 class="font-display text-2xl font-bold tracking-tight text-white sm:text-3xl">Pass</h2>
-        <p class="mt-1 text-xs text-white/40">Votre accès pro, à présenter à l'entrée des lieux partenaires.</p>
-      </div>
-    </div>
-
-    <div class="mt-6 grid gap-5 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
-      <!-- Carte Pass -->
-      <div id="pass-card" class="overflow-hidden rounded-2xl border border-white/[0.08] bg-mineral">
-        <div class="flex items-center justify-between border-b border-white/[0.06] px-5 py-4">
-          <span class="text-[10px] font-extrabold tracking-[0.28em] text-white/70">NIGHTLY</span>
-          <span id="pass-tier" class="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-white/60">Membre</span>
-        </div>
-        <div class="px-5 py-6">
-          <div class="mx-auto w-fit rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4">
-            <canvas id="pass-qr" width="240" height="240" class="h-[184px] w-[184px]" aria-label="QR code du pass"></canvas>
-          </div>
-          <p id="pass-code" class="mt-5 text-center font-mono text-sm tracking-[0.18em] text-white/85">NGH-0000-0000</p>
-          <p id="pass-holder" class="mt-4 text-center font-display text-lg font-bold text-white">Profil à compléter</p>
-          <p id="pass-meta" class="mt-1 text-center text-xs text-white/45">Créez votre profil pour activer le pass</p>
-        </div>
-        <div class="grid grid-cols-3 divide-x divide-white/[0.06] border-t border-white/[0.06] text-center">
-          <div class="px-2 py-3">
-            <p class="text-[10px] uppercase tracking-[0.08em] text-white/35">Statut</p>
-            <p id="pass-status" class="mt-1 text-[11px] font-semibold text-white/70">Inactif</p>
-          </div>
-          <div class="px-2 py-3">
-            <p class="text-[10px] uppercase tracking-[0.08em] text-white/35">Valide</p>
-            <p id="pass-valid" class="mt-1 font-mono text-[11px] text-white/70">—</p>
-          </div>
-          <div class="px-2 py-3">
-            <p class="text-[10px] uppercase tracking-[0.08em] text-white/35">Depuis</p>
-            <p id="pass-since" class="mt-1 font-mono text-[11px] text-white/70">—</p>
-          </div>
-        </div>
-        <div class="flex gap-2 border-t border-white/[0.06] p-4">
-          <button type="button" id="pass-regen" class="flex-1 rounded-xl border border-white/10 py-2 text-[11px] font-semibold text-white/70 transition hover:border-white/25 hover:text-white">Régénérer le code</button>
-          <button type="button" id="pass-edit" class="flex-1 rounded-xl bg-white py-2 text-[11px] font-bold text-black transition hover:scale-[1.03] active:scale-100">Mon profil</button>
-        </div>
-      </div>
-
-      <!-- Demandes de booking -->
-      <div class="rounded-2xl border border-white/[0.08] bg-mineral p-5">
-        <div class="flex items-center justify-between gap-3">
-          <p class="text-[10px] font-bold uppercase tracking-[0.14em] text-white/35">Mes demandes de booking</p>
-          <span id="booking-count" class="font-mono text-xs text-white/50">0</span>
-        </div>
-        <div id="booking-list" class="mt-4 space-y-3"></div>
-        <p id="booking-empty" class="rounded-xl border border-dashed border-white/10 py-12 text-center text-xs text-white/40">Aucune demande envoyée. Ouvrez le roster pour booker un talent.</p>
-      </div>
-    </div>
-  </section>
 </main>
 
 <!-- ══════════════════════════════════════════════════════════════
      NAV MOBILE
      ══════════════════════════════════════════════════════════ -->
 <nav class="fixed bottom-0 left-0 right-0 z-40 border-t border-white/[0.07] bg-ink/90 backdrop-blur-xl md:hidden" aria-label="Navigation mobile">
-  <div class="mx-auto grid max-w-md grid-cols-4 px-2 pb-[env(safe-area-inset-bottom)]">
+  <div class="mx-auto grid max-w-md grid-cols-3 px-2 pb-[env(safe-area-inset-bottom)]">
     <button type="button" data-tab="feed" class="nav-mobile flex flex-col items-center gap-1 py-3 transition">
       <i data-lucide="layout-list" class="h-[18px] w-[18px]"></i><span class="text-[10px] font-semibold">Feed</span>
     </button>
@@ -334,9 +286,6 @@
     </button>
     <button type="button" data-tab="talents" class="nav-mobile flex flex-col items-center gap-1 py-3 transition">
       <i data-lucide="users-round" class="h-[18px] w-[18px]"></i><span class="text-[10px] font-semibold">Talents</span>
-    </button>
-    <button type="button" data-tab="pass" class="nav-mobile flex flex-col items-center gap-1 py-3 transition">
-      <i data-lucide="qr-code" class="h-[18px] w-[18px]"></i><span class="text-[10px] font-semibold">Pass</span>
     </button>
   </div>
 </nav>
@@ -566,7 +515,7 @@
         <!-- Étape 2 -->
         <div class="onb-step hidden" data-step="2">
           <h3 class="font-display text-2xl font-bold leading-tight text-white">Votre identité</h3>
-          <p class="mt-2 text-xs leading-relaxed text-white/45">Le nom qui apparaîtra sur le roster, le feed et votre pass.</p>
+          <p class="mt-2 text-xs leading-relaxed text-white/45">Le nom qui apparaîtra sur le roster et dans le feed.</p>
           <div class="mt-5 space-y-4">
             <div>
               <label class="n-label" for="onb-name"><span id="onb-name-label">Nom de scène</span></label>
@@ -1135,7 +1084,7 @@
      6. NAVIGATION PAR ONGLETS
      ══════════════════════════════════════════════════════ */
   function setTab(tab) {
-    const valid = ["feed", "annonces", "talents", "pass"];
+    const valid = ["feed", "annonces", "talents"];
     if (valid.indexOf(tab) === -1) tab = "feed";
     state.ui.tab = tab;
 
@@ -1155,7 +1104,6 @@
       btn.classList.toggle("text-white/35", !active);
     });
 
-    if (tab === "pass") renderPass();
     window.scrollTo({ top: 0, behavior: "smooth" });
     saveState();
   }
@@ -1268,7 +1216,7 @@
       const unit = $("#onb-unit").value || DEFAULT_UNIT[discipline];
       const gear = splitList($("#onb-gear").value);
 
-      state.user = { role: "talent", name: name, city: city, discipline: discipline, since: Date.now(), pass: newPassCode() };
+      state.user = { role: "talent", name: name, city: city, discipline: discipline, since: Date.now() };
 
       const existing = ownTalent();
       const profile = {
@@ -1289,7 +1237,7 @@
       state.user = {
         role: "organisateur", name: name, city: city, structure: structure,
         venueType: $("#onb-orga-type").value, capacity: Number($("#onb-capacity").value) || null,
-        since: Date.now(), pass: newPassCode(),
+        since: Date.now(),
       };
       state.talents = state.talents.filter((t) => !t.own);
     }
@@ -1299,7 +1247,7 @@
     closeOverlay("onboarding");
     renderAll();
     setTab(onbRole === "talent" ? "talents" : "annonces");
-    toast("Profil activé. Votre pass NIGHTLY est prêt.", "cyan");
+    toast("Profil activé. Bienvenue sur NIGHTLY.", "cyan");
   });
 
   /* ══════════════════════════════════════════════════════════
@@ -2008,10 +1956,12 @@
   });
 
   function renderBookings() {
+    const panel = $("#booking-panel");
     const list = $("#booking-list");
+    if (!panel || !list) return;
     const items = state.bookings;
+    panel.classList.toggle("hidden", items.length === 0);
     $("#booking-count").textContent = items.length;
-    $("#booking-empty").classList.toggle("hidden", items.length > 0);
     list.innerHTML = items
       .map(
         (b) =>
@@ -2065,8 +2015,6 @@
     openOverlay("profile-modal");
   }
 
-  $("#pass-edit").addEventListener("click", openProfileModal);
-
   $("#profile-form").addEventListener("submit", (e) => {
     e.preventDefault();
     if (!state.user) return;
@@ -2107,146 +2055,6 @@
   });
 
   /* ══════════════════════════════════════════════════════════
-     14. PASS QR
-     ══════════════════════════════════════════════════════ */
-  function newPassCode() {
-    const chunk = () => Math.random().toString(16).slice(2, 6).toUpperCase();
-    return "NGH-" + chunk() + "-" + chunk();
-  }
-
-  function hashString(str) {
-    let h = 2166136261;
-    for (let i = 0; i < str.length; i++) {
-      h ^= str.charCodeAt(i);
-      h = Math.imul(h, 16777619);
-    }
-    return h >>> 0;
-  }
-
-  /** Matrice QR réelle si la librairie est chargée, motif déterministe sinon. */
-  function passMatrix(payload) {
-    if (typeof window.qrcode === "function") {
-      try {
-        const qr = window.qrcode(0, "M");
-        qr.addData(payload);
-        qr.make();
-        const n = qr.getModuleCount();
-        const matrix = [];
-        for (let r = 0; r < n; r++) {
-          const row = [];
-          for (let c = 0; c < n; c++) row.push(!!qr.isDark(r, c));
-          matrix.push(row);
-        }
-        return matrix;
-      } catch (err) { /* repli sur le motif déterministe */ }
-    }
-
-    const size = 29;
-    let seed = hashString(payload);
-    const rand = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
-    const matrix = [];
-    for (let r = 0; r < size; r++) {
-      const row = [];
-      for (let c = 0; c < size; c++) row.push(rand() > 0.52);
-      matrix.push(row);
-    }
-    const finder = (or, oc) => {
-      for (let r = 0; r < 7; r++) {
-        for (let c = 0; c < 7; c++) {
-          const edge = r === 0 || r === 6 || c === 0 || c === 6;
-          const core = r >= 2 && r <= 4 && c >= 2 && c <= 4;
-          matrix[or + r][oc + c] = edge || core;
-        }
-      }
-      for (let r = -1; r < 8; r++) {
-        for (let c = -1; c < 8; c++) {
-          const rr = or + r, cc = oc + c;
-          if (rr < 0 || cc < 0 || rr >= size || cc >= size) continue;
-          if (r === -1 || r === 7 || c === -1 || c === 7) matrix[rr][cc] = false;
-        }
-      }
-    };
-    finder(0, 0);
-    finder(0, size - 7);
-    finder(size - 7, 0);
-    return matrix;
-  }
-
-  function drawPass(payload) {
-    const canvas = $("#pass-qr");
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    const matrix = passMatrix(payload);
-    const modules = matrix.length;
-    const quiet = 2;
-    const total = modules + quiet * 2;
-    const dpr = window.devicePixelRatio || 1;
-    const cssSize = 184;
-
-    canvas.width = Math.round(cssSize * dpr);
-    canvas.height = Math.round(cssSize * dpr);
-    const scale = canvas.width / total;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#ffffff";
-    for (let r = 0; r < modules; r++) {
-      for (let c = 0; c < modules; c++) {
-        if (!matrix[r][c]) continue;
-        const x = (c + quiet) * scale;
-        const y = (r + quiet) * scale;
-        const s = Math.ceil(scale);
-        ctx.fillRect(Math.floor(x), Math.floor(y), s, s);
-      }
-    }
-  }
-
-  function renderPass() {
-    const user = state.user;
-    const codeEl = $("#pass-code");
-
-    if (!user) {
-      codeEl.textContent = "NGH-••••-••••";
-      $("#pass-holder").textContent = "Profil à compléter";
-      $("#pass-meta").textContent = "Créez votre profil pour activer le pass";
-      $("#pass-status").textContent = "Inactif";
-      $("#pass-tier").textContent = "Visiteur";
-      $("#pass-valid").textContent = "—";
-      $("#pass-since").textContent = "—";
-      drawPass("nightly://pass/inactive");
-      renderBookings();
-      refreshIcons();
-      return;
-    }
-
-    if (!user.pass) user.pass = newPassCode();
-    const own = ownTalent();
-    const validUntil = new Date();
-    validUntil.setMonth(validUntil.getMonth() + 12);
-
-    codeEl.textContent = user.pass;
-    $("#pass-holder").textContent = user.name;
-    $("#pass-meta").textContent = user.role === "talent"
-      ? DISCIPLINE_LABEL[user.discipline] + (own ? " · " + own.specialty : "") + " · " + user.city
-      : (user.structure || "Organisateur") + " · " + (user.venueType || "Lieu") + " · " + user.city;
-    $("#pass-status").textContent = own && own.status === "touring" ? "En tournée" : "Actif";
-    $("#pass-tier").textContent = user.role === "talent" ? "Talent" : "Organisateur";
-    $("#pass-valid").textContent = validUntil.toLocaleDateString("fr-FR", { month: "2-digit", year: "numeric" });
-    $("#pass-since").textContent = new Date(user.since || Date.now()).toLocaleDateString("fr-FR", { month: "2-digit", year: "2-digit" });
-
-    drawPass("nightly://pass/" + user.pass + "?holder=" + encodeURIComponent(user.name));
-    renderBookings();
-    refreshIcons();
-  }
-
-  $("#pass-regen").addEventListener("click", () => {
-    if (!state.user) { openOnboarding(); return; }
-    state.user.pass = newPassCode();
-    saveState();
-    renderPass();
-    toast("Nouveau code de pass généré.", "cyan");
-  });
-
-  /* ══════════════════════════════════════════════════════════
      15. INITIALISATION
      ══════════════════════════════════════════════════════ */
   function renderAll() {
@@ -2254,7 +2062,7 @@
     renderFeed();
     renderMissions();
     renderTalents();
-    renderPass();
+    renderBookings();
     syncComposer();
     refreshIcons();
   }
