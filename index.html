@@ -609,14 +609,28 @@
 <div id="profile-modal" class="n-overlay fixed inset-0 z-[75]" role="dialog" aria-modal="true">
   <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" data-close></div>
   <div class="absolute inset-0 flex items-end justify-center p-0 sm:items-center sm:p-6">
-    <div class="n-panel n-scroll max-h-[92vh] w-full max-w-md overflow-y-auto rounded-t-3xl border border-white/[0.08] bg-mineral sm:rounded-2xl">
-      <div class="sticky top-0 flex items-center justify-between gap-3 border-b border-white/[0.06] bg-mineral/95 px-5 py-4 backdrop-blur-xl">
-        <p class="text-sm font-bold text-white">Mon profil</p>
-        <button type="button" class="grid h-8 w-8 place-items-center rounded-full border border-white/10 text-white/60 transition hover:text-white" data-close aria-label="Fermer">
-          <i data-lucide="x" class="h-4 w-4"></i>
-        </button>
+    <div class="n-panel n-scroll max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-t-3xl border border-white/[0.08] bg-mineral sm:rounded-2xl">
+      <div class="sticky top-0 z-10 border-b border-white/[0.06] bg-mineral/95 backdrop-blur-xl">
+        <div class="flex items-center justify-between gap-3 px-5 pt-4">
+          <p class="font-display text-sm font-bold text-white">Mon profil</p>
+          <button type="button" class="grid h-8 w-8 place-items-center rounded-full border border-white/10 text-white/60 transition hover:text-white" data-close aria-label="Fermer">
+            <i data-lucide="x" class="h-4 w-4"></i>
+          </button>
+        </div>
+        <div id="profile-tabs" class="flex gap-1.5 px-5 py-3" role="tablist" aria-label="Sections du profil">
+          <button type="button" data-profile-tab="edit" role="tab" aria-selected="true" class="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/15 px-3.5 py-1.5 text-xs font-semibold text-white transition">
+            <i data-lucide="user" class="h-3.5 w-3.5"></i>
+            Mon profil
+          </button>
+          <button type="button" data-profile-tab="activity" role="tab" aria-selected="false" class="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-3.5 py-1.5 text-xs font-medium text-white/50 transition hover:border-white/20 hover:text-white/80">
+            <i data-lucide="activity" class="h-3.5 w-3.5"></i>
+            Mon activité
+            <span id="profile-activity-count" class="font-mono text-[10px] text-white/40">0</span>
+          </button>
+        </div>
       </div>
-      <form id="profile-form" class="space-y-4 px-5 py-5">
+
+      <form id="profile-form" data-profile-panel="edit" class="space-y-4 px-5 py-5">
         <div>
           <label class="n-label" for="profile-name">Nom</label>
           <input id="profile-name" class="n-field" required />
@@ -662,6 +676,22 @@
         <button type="submit" class="w-full rounded-xl bg-white py-3 text-xs font-bold text-black transition hover:scale-[1.02] active:scale-100">Enregistrer</button>
         <button type="button" id="profile-reset" class="w-full text-center text-[11px] font-medium text-white/30 transition hover:text-white/60">Réinitialiser mes données locales</button>
       </form>
+
+      <div id="profile-activity" data-profile-panel="activity" class="hidden px-5 py-5">
+        <div class="flex items-end justify-between gap-3">
+          <div>
+            <p class="text-[10px] font-bold uppercase tracking-[0.14em] text-white/35">Traçabilité</p>
+            <p class="mt-1 text-xs text-white/45">Candidatures et demandes de booking</p>
+          </div>
+          <p class="font-mono text-xs text-neon-cyan"><span id="activity-total-count">0</span></p>
+        </div>
+        <div id="activity-filters" class="mt-4 flex gap-2 overflow-x-auto no-scrollbar pb-1" role="tablist" aria-label="Filtrer l'activité"></div>
+        <div id="activity-list" class="mt-4 space-y-3"></div>
+        <div id="activity-empty" class="mt-4 hidden rounded-2xl border border-dashed border-white/10 px-5 py-12 text-center">
+          <i data-lucide="inbox" class="mx-auto h-5 w-5 text-white/25"></i>
+          <p class="mt-3 text-xs text-white/40">Aucune candidature ni réservation pour le moment.</p>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -983,6 +1013,7 @@
     posts: seedPosts(),
     missions: seedMissions(),
     bookings: [],
+    applications: [],
     onboarded: false,
     ui: { tab: "talents", talentFilter: "all", talentQuery: "", talentCity: "all", missionFilter: "all" },
   });
@@ -990,6 +1021,8 @@
   let state = defaultState();
   let draftMedia = null;
   let bookingTarget = null;
+  let profileTab = "edit";
+  let activityFilter = "all";
 
   function loadState() {
     try {
@@ -1004,6 +1037,7 @@
       if (!Array.isArray(state.posts)) state.posts = seedPosts();
       if (!Array.isArray(state.missions)) state.missions = seedMissions();
       if (!Array.isArray(state.bookings)) state.bookings = [];
+      if (!Array.isArray(state.applications)) state.applications = [];
 
       // Les publications de démonstration enregistrées avant l'ajout des liens
       // B2B récupèrent leur talent, leur mission et leur type sans perdre les
@@ -1623,9 +1657,25 @@
     if (apply) {
       if (!state.user) { closeOverlay("mission-sheet"); openOnboarding(); return; }
       const m = state.missions.filter((x) => x.id === apply.dataset.missionApply)[0];
-      if (m) { m.applicants = Number(m.applicants || 0) + 1; saveState(); renderMissions(); }
+      if (m) {
+        m.applicants = Number(m.applicants || 0) + 1;
+        state.applications.unshift({
+          id: uid("a"),
+          missionId: m.id,
+          missionTitle: m.title,
+          venue: m.venue,
+          city: m.city,
+          date: m.date,
+          budget: m.budget,
+          ts: Date.now(),
+          status: "En attente",
+        });
+        saveState();
+        renderMissions();
+        renderProfileActivity();
+      }
       closeOverlay("mission-sheet");
-      toast("Candidature envoyée. L'organisateur reçoit votre profil.", "cyan");
+      toast("Candidature enregistrée dans votre profil.", "cyan");
       return;
     }
     const del = e.target.closest("[data-mission-delete]");
@@ -2012,6 +2062,7 @@
     state.bookings.unshift(booking);
     saveState();
     renderBookings();
+    renderProfileActivity();
     closeOverlay("booking-drawer");
     toast("Demande envoyée à " + booking.talentName + ". Réponse attendue sous 24 h.", "cyan");
     bookingTarget = null;
@@ -2052,12 +2103,132 @@
     state.bookings = state.bookings.filter((b) => b.id !== btn.dataset.bookingCancel);
     saveState();
     renderBookings();
+    renderProfileActivity();
     toast("Demande annulée.");
   });
 
   /* ══════════════════════════════════════════════════════════
      13. PROFIL
      ══════════════════════════════════════════════════════ */
+  function profileTabClass(active) {
+    const base = "inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs transition";
+    return active
+      ? base + " border-white/25 bg-white/15 font-semibold text-white"
+      : base + " border-white/10 font-medium text-white/50 hover:border-white/20 hover:text-white/80";
+  }
+
+  function setProfileTab(tab) {
+    profileTab = tab === "activity" ? "activity" : "edit";
+    $$("[data-profile-tab]").forEach((btn) => {
+      const active = btn.dataset.profileTab === profileTab;
+      btn.className = profileTabClass(active);
+      btn.setAttribute("aria-selected", active ? "true" : "false");
+    });
+    $$("[data-profile-panel]").forEach((panel) => {
+      panel.classList.toggle("hidden", panel.dataset.profilePanel !== profileTab);
+    });
+    if (profileTab === "activity") renderProfileActivity();
+    refreshIcons();
+  }
+
+  function activityItems(filter) {
+    const apps = (state.applications || []).map((a) => Object.assign({}, a, { kind: "application" }));
+    const books = (state.bookings || []).map((b) => Object.assign({}, b, { kind: "booking" }));
+    if (filter === "applications") return apps;
+    if (filter === "bookings") return books;
+    return apps.concat(books).sort((a, b) => Number(b.ts || 0) - Number(a.ts || 0));
+  }
+
+  function activityApplicationCard(a) {
+    return (
+      '<article class="group cursor-pointer rounded-xl border border-white/[0.08] bg-white/[0.02] p-3.5 transition hover:border-white/20" data-open-mission="' + esc(a.missionId) + '">' +
+        '<div class="flex items-start justify-between gap-3">' +
+          '<div class="min-w-0">' +
+            '<p class="text-[10px] font-bold uppercase tracking-[0.14em] text-white/35">Candidature</p>' +
+            '<p class="mt-1 font-display text-sm font-bold text-white">' + esc(a.missionTitle) + "</p>" +
+            '<p class="mt-1 flex items-center gap-1.5 text-[11px] text-white/45">' +
+              '<i data-lucide="map-pin" class="h-3 w-3 shrink-0"></i>' +
+              "<span>" + esc(a.venue) + " · " + esc(a.city) + "</span>" +
+            "</p>" +
+          "</div>" +
+          '<span class="shrink-0 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-white/60">' + esc(a.status || "En attente") + "</span>" +
+        "</div>" +
+        '<div class="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.06] pt-2.5">' +
+          '<div class="flex flex-wrap items-center gap-3">' +
+            '<p class="font-mono text-xs text-white">' + esc(eur(a.budget)) + ' <span class="text-[11px] text-neon-cyan">net</span></p>' +
+            '<p class="flex items-center gap-1.5 font-mono text-[11px] text-white/45">' +
+              '<i data-lucide="calendar" class="h-3 w-3"></i>' + esc(shortDate(a.date)) +
+            "</p>" +
+          "</div>" +
+          '<button type="button" data-application-cancel="' + esc(a.id) + '" class="text-[11px] font-semibold text-white/35 transition hover:text-white">Annuler la candidature</button>' +
+        "</div>" +
+      "</article>"
+    );
+  }
+
+  function activityBookingCard(b) {
+    return (
+      '<article class="rounded-xl border border-white/[0.08] bg-white/[0.02] p-3.5">' +
+        '<div class="flex items-start justify-between gap-3">' +
+          '<div class="min-w-0">' +
+            '<p class="text-[10px] font-bold uppercase tracking-[0.14em] text-white/35">Booking</p>' +
+            '<p class="mt-1 font-display text-sm font-bold text-white">' + esc(b.talentName) + "</p>" +
+            '<p class="mt-1 flex items-center gap-1.5 text-[11px] text-white/45">' +
+              '<i data-lucide="map-pin" class="h-3 w-3 shrink-0"></i>' +
+              "<span>" + esc(b.city) + "</span>" +
+            "</p>" +
+          "</div>" +
+          '<span class="shrink-0 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-white/60">' + esc(b.status || "Envoyée") + "</span>" +
+        "</div>" +
+        '<div class="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.06] pt-2.5">' +
+          '<div class="flex flex-wrap items-center gap-3">' +
+            '<p class="font-mono text-xs text-white">' + esc(eur(b.fee)) + ' <span class="text-[11px] text-neon-cyan">net</span></p>' +
+            '<p class="flex items-center gap-1.5 font-mono text-[11px] text-white/45">' +
+              '<i data-lucide="calendar" class="h-3 w-3"></i>' + esc(shortDate(b.date)) +
+            "</p>" +
+          "</div>" +
+          '<button type="button" data-activity-booking-cancel="' + esc(b.id) + '" class="text-[11px] font-semibold text-white/35 transition hover:text-white">Annuler</button>' +
+        "</div>" +
+      "</article>"
+    );
+  }
+
+  function renderProfileActivity() {
+    const countEl = $("#profile-activity-count");
+    const totalEl = $("#activity-total-count");
+    const filters = $("#activity-filters");
+    const list = $("#activity-list");
+    const empty = $("#activity-empty");
+    if (!filters || !list || !empty) return;
+
+    const apps = state.applications || [];
+    const books = state.bookings || [];
+    const total = apps.length + books.length;
+    if (countEl) countEl.textContent = String(total);
+    if (totalEl) totalEl.textContent = String(total);
+
+    const capsules = [
+      { id: "all", label: "Tout" },
+      { id: "applications", label: "Candidatures (" + apps.length + ")" },
+      { id: "bookings", label: "Bookings envoyés (" + books.length + ")" },
+    ];
+    filters.innerHTML = capsules.map((c) => {
+      const active = activityFilter === c.id;
+      const base = "shrink-0 rounded-full py-1.5 px-3.5 text-xs transition duration-200 whitespace-nowrap";
+      const cls = active
+        ? base + " bg-white/15 border border-white/25 text-white font-semibold"
+        : base + " bg-transparent border border-white/10 text-white/50 font-medium hover:border-white/20 hover:text-white/80";
+      return '<button type="button" role="tab" aria-selected="' + (active ? "true" : "false") + '" data-activity-filter="' + esc(c.id) + '" class="' + cls + '">' + esc(c.label) + "</button>";
+    }).join("");
+
+    const items = activityItems(activityFilter);
+    list.innerHTML = items.map((item) => item.kind === "booking" ? activityBookingCard(item) : activityApplicationCard(item)).join("");
+    const noItems = items.length === 0;
+    empty.classList.toggle("hidden", !noItems);
+    list.classList.toggle("hidden", noItems);
+    refreshIcons();
+  }
+
   function openProfileModal() {
     if (!state.user) { openOnboarding(); return; }
     const isTalent = state.user.role === "talent";
@@ -2074,8 +2245,57 @@
       $("#profile-unit").value = own.unit || "set";
       $("#profile-gear").value = (own.gear || []).join(", ");
     }
+    renderProfileActivity();
+    setProfileTab("edit");
     openOverlay("profile-modal");
   }
+
+  $("#profile-modal").addEventListener("click", (e) => {
+    const tabBtn = e.target.closest("[data-profile-tab]");
+    if (tabBtn) {
+      setProfileTab(tabBtn.dataset.profileTab);
+      return;
+    }
+
+    const filterBtn = e.target.closest("[data-activity-filter]");
+    if (filterBtn) {
+      activityFilter = filterBtn.dataset.activityFilter;
+      renderProfileActivity();
+      return;
+    }
+
+    const cancelApp = e.target.closest("[data-application-cancel]");
+    if (cancelApp) {
+      e.preventDefault();
+      e.stopPropagation();
+      state.applications = (state.applications || []).filter((a) => a.id !== cancelApp.dataset.applicationCancel);
+      saveState();
+      renderProfileActivity();
+      toast("Candidature annulée.");
+      return;
+    }
+
+    const cancelBook = e.target.closest("[data-activity-booking-cancel]");
+    if (cancelBook) {
+      e.preventDefault();
+      e.stopPropagation();
+      state.bookings = (state.bookings || []).filter((b) => b.id !== cancelBook.dataset.activityBookingCancel);
+      saveState();
+      renderBookings();
+      renderProfileActivity();
+      toast("Demande annulée.");
+      return;
+    }
+
+    const appCard = e.target.closest("[data-open-mission]");
+    if (appCard) {
+      const missionId = appCard.dataset.openMission;
+      const m = state.missions.filter((x) => x.id === missionId)[0];
+      if (!m) { toast("Cette mission n'est plus disponible."); return; }
+      closeOverlay("profile-modal");
+      openMissionSheet(missionId);
+    }
+  });
 
   $("#profile-form").addEventListener("submit", (e) => {
     e.preventDefault();
@@ -2109,6 +2329,8 @@
   $("#profile-reset").addEventListener("click", () => {
     try { localStorage.removeItem(STORAGE_KEY); } catch (err) { /* stockage indisponible */ }
     state = defaultState();
+    profileTab = "edit";
+    activityFilter = "all";
     closeOverlay("profile-modal");
     renderAll();
     setTab("talents");
@@ -2125,6 +2347,7 @@
     renderMissions();
     renderTalents();
     renderBookings();
+    renderProfileActivity();
     syncComposer();
     refreshIcons();
   }
