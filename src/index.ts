@@ -26,9 +26,13 @@ await fastify.register(agentWebhookRoutes);
 
 export default fastify;
 
-try {
-  await fastify.listen({ port: config.PORT, host: config.HOST });
-} catch (error) {
-  fastify.log.error(error);
-  process.exit(1);
+const isVercel = Boolean(process.env.VERCEL);
+
+if (!isVercel) {
+  try {
+    await fastify.listen({ port: config.PORT, host: config.HOST });
+  } catch (error) {
+    fastify.log.error(error);
+    process.exit(1);
+  }
 }
