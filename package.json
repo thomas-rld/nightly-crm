@@ -4,11 +4,11 @@
   "description": "Connecteur d'agents pour nightly-crm : reçoit et traite des événements d'agents via une API webhook.",
   "private": true,
   "type": "module",
-  "main": "src/server.ts",
+  "main": "server.ts",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
+    "dev": "tsx watch server.ts",
     "build": "tsc -p tsconfig.json",
-    "start": "tsx src/server.ts",
+    "start": "tsx server.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
