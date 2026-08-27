@@ -1,18 +1,13 @@
-import Fastify from "fastify";
-import { config } from "./config.js";
-import { agentWebhookRoutes } from "./routes/agentWebhook.js";
+import app from "./app.js";
+import { config, isVercel } from "./config.js";
 
-const fastify = Fastify({
-  logger: true,
-});
+export default app;
 
-fastify.get("/health", async () => ({ status: "ok" }));
-
-await fastify.register(agentWebhookRoutes);
-
-try {
-  await fastify.listen({ port: config.PORT, host: config.HOST });
-} catch (error) {
-  fastify.log.error(error);
-  process.exit(1);
+if (!isVercel) {
+  try {
+    await app.listen({ port: config.PORT, host: config.HOST });
+  } catch (error) {
+    app.log.error(error);
+    process.exit(1);
+  }
 }

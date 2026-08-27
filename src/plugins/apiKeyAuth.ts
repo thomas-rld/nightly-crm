@@ -11,7 +11,7 @@ export async function verifyApiKey(
 ): Promise<void> {
   const providedKey = request.headers["x-api-key"];
 
-  if (!providedKey || providedKey !== config.API_KEY) {
+  if (!config.API_KEY || !providedKey || providedKey !== config.API_KEY) {
     reply.code(401).send({
       error: "Unauthorized",
       message: "Clé d'API manquante ou invalide (header x-api-key)",
