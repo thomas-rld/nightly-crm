@@ -1,6 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
+  "buildCommand": "mkdir -p public && cp -f index.html public/index.html",
+  "outputDirectory": "public",
   "rewrites": [
     { "source": "/health", "destination": "/api/health" },
     { "source": "/webhook/agent", "destination": "/api/webhook" }
