@@ -906,6 +906,7 @@
     return [
       {
         id: "p_seed1", authorName: "Léa Moreau", authorRole: "DJ · Melodic Techno", authorCity: "Paris",
+        authorTalentId: "t_lea", type: "dispo",
         ts: now - 42 * 60000, own: false, likes: 34, liked: false,
         text: "Closing de 3 h au Rex hier, la salle a tenu jusqu'au bout. Deux dates encore libres en septembre pour du peak time, écrivez-moi ici plutôt qu'en DM.",
         media: { type: "image", src: UNSPLASH("1540039155733-5bb30b53aa14") },
@@ -915,6 +916,7 @@
       },
       {
         id: "p_seed2", authorName: "Bassment Club", authorRole: "Club · 400 places", authorCity: "Marseille",
+        missionId: "m_seed3", type: "recrutement",
         ts: now - 4 * 3600000, own: false, likes: 12, liked: false,
         text: "On cherche un photographe pour notre anniversaire le 5 septembre. Cachet net 320 €, sélection de 40 images, accès booth et backstage garanti. Mission déposée dans les annonces.",
         media: null,
@@ -922,6 +924,7 @@
       },
       {
         id: "p_seed3", authorName: "Lukas Yuen", authorRole: "Vidéaste · Aftermovie", authorCity: "Lyon",
+        authorTalentId: "t_lukas", type: "actu",
         ts: now - 26 * 3600000, own: false, likes: 51, liked: false,
         text: "Aftermovie du week-end livré en 68 h, master 4K plus trois formats verticaux. Les organisateurs qui veulent du contenu exploitable dès le lundi matin, c'est le bon rythme.",
         media: { type: "image", src: UNSPLASH("1524368535928-5b5e00ddc76b") },
@@ -1001,6 +1004,20 @@
       if (!Array.isArray(state.posts)) state.posts = seedPosts();
       if (!Array.isArray(state.missions)) state.missions = seedMissions();
       if (!Array.isArray(state.bookings)) state.bookings = [];
+
+      // Les publications de démonstration enregistrées avant l'ajout des liens
+      // B2B récupèrent leur talent, leur mission et leur type sans perdre les
+      // likes ni les commentaires accumulés.
+      const seeds = seedPosts();
+      state.posts = state.posts.map((post) => {
+        const seed = seeds.filter((s) => s.id === post.id)[0];
+        if (!seed) return post;
+        return Object.assign({}, post, {
+          authorTalentId: post.authorTalentId || seed.authorTalentId,
+          missionId: post.missionId || seed.missionId,
+          type: post.type || seed.type,
+        });
+      });
     } catch (err) {
       state = defaultState();
     }
@@ -1253,7 +1270,31 @@
   /* ══════════════════════════════════════════════════════════
      9. FEED
      ══════════════════════════════════════════════════════ */
+  const POST_CONTEXT = { dispo: "Disponibilité", recrutement: "Recrutement", actu: "Actu" };
+
+  /** Bouton d'action B2B en tête de publication. */
+  function feedAction(attribute, value, label) {
+    return (
+      '<button type="button" ' + attribute + '="' + esc(value) + '" ' +
+      'class="shrink-0 rounded-xl border border-white/10 bg-white/[0.08] px-3.5 py-1.5 text-xs font-bold text-white transition hover:bg-white hover:text-black">' +
+      esc(label) + "</button>"
+    );
+  }
+
   function postCard(post) {
+    const talent = post.authorTalentId ? state.talents.filter((t) => t.id === post.authorTalentId)[0] : null;
+    const mission = post.missionId ? state.missions.filter((m) => m.id === post.missionId)[0] : null;
+    const context = POST_CONTEXT[post.type] || POST_CONTEXT.actu;
+
+    // Avatar et nom renvoient vers la fiche du talent quand la publication en cite un.
+    const authorLink = talent ? ' data-feed-author="' + esc(talent.id) + '"' : "";
+    const authorSkin = talent ? " cursor-pointer transition hover:opacity-80" : "";
+
+    const actions = post.own
+      ? '<button type="button" data-post-delete="' + esc(post.id) + '" class="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-white/[0.08] text-white/35 transition hover:border-white/20 hover:text-white" aria-label="Supprimer la publication"><i data-lucide="trash-2" class="h-3.5 w-3.5"></i></button>'
+      : (talent ? feedAction("data-feed-book", talent.id, "Booker") : "") +
+        (mission ? feedAction("data-feed-mission", mission.id, "Voir la mission") : "");
+
     const media = post.media && post.media.src
       ? '<div class="mt-3 overflow-hidden rounded-xl border border-white/[0.07]">' +
         '<img src="' + esc(post.media.src) + '" alt="Média de la publication" loading="lazy" class="max-h-[420px] w-full object-cover" />' +
@@ -1276,14 +1317,15 @@
       '<article class="n-rise overflow-hidden rounded-2xl border border-white/[0.08] bg-mineral" data-post="' + esc(post.id) + '">' +
         '<div class="p-4">' +
           '<div class="flex items-start gap-3">' +
-            '<span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/[0.08] text-xs font-bold text-white/80">' + esc(initials(post.authorName)) + "</span>" +
+            '<span' + authorLink + ' class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/[0.08] text-xs font-bold text-white/80' + authorSkin + '">' + esc(initials(post.authorName)) + "</span>" +
             '<div class="min-w-0 flex-1">' +
-              '<p class="font-display text-sm font-bold leading-tight text-white">' + esc(post.authorName) + "</p>" +
-              '<p class="mt-0.5 text-[11px] text-white/40">' + esc(post.authorRole) + " · " + esc(post.authorCity) + " · " + esc(timeAgo(post.ts)) + "</p>" +
+              '<p' + authorLink + ' class="inline-block font-display text-sm font-bold leading-tight text-white' + authorSkin + '">' + esc(post.authorName) + "</p>" +
+              '<p class="mt-0.5 flex flex-wrap items-center gap-x-2 text-[11px] text-white/40">' +
+                "<span>" + esc(post.authorRole) + " · " + esc(post.authorCity) + " · " + esc(timeAgo(post.ts)) + "</span>" +
+                '<span class="font-mono text-[10px] uppercase tracking-[0.08em] text-white/40">[ ' + esc(context) + " ]</span>" +
+              "</p>" +
             "</div>" +
-            (post.own
-              ? '<button type="button" data-post-delete="' + esc(post.id) + '" class="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-white/[0.08] text-white/35 transition hover:border-white/20 hover:text-white" aria-label="Supprimer la publication"><i data-lucide="trash-2" class="h-3.5 w-3.5"></i></button>'
-              : "") +
+            '<div class="flex shrink-0 items-center gap-2">' + actions + "</div>" +
           "</div>" +
           '<p class="mt-3 whitespace-pre-line text-sm leading-relaxed text-white/80">' + esc(post.text) + "</p>" +
           media +
@@ -1318,10 +1360,14 @@
     $("#side-available").innerHTML = available
       .map(
         (t) =>
-          '<li class="flex items-center gap-2.5"><span class="h-1.5 w-1.5 shrink-0 rounded-full bg-neon-cyan"></span>' +
+          '<li><button type="button" data-side-talent="' + esc(t.id) + '" ' +
+          'class="flex w-full cursor-pointer items-center gap-2.5 text-left transition hover:opacity-80" ' +
+          'aria-label="Ouvrir la fiche de ' + esc(t.name) + '">' +
+          '<span class="h-1.5 w-1.5 shrink-0 rounded-full bg-neon-cyan"></span>' +
           '<span class="min-w-0 flex-1"><span class="block truncate font-display text-xs font-bold text-white">' + esc(t.name) + "</span>" +
           '<span class="block truncate text-[10px] text-white/40">' + esc(DISCIPLINE_LABEL[t.discipline]) + " · " + esc(t.city) + "</span></span>" +
-          '<span class="shrink-0 font-mono text-[10px] text-white/50">' + esc(eur(t.rate)) + "</span></li>"
+          '<span class="shrink-0 font-mono text-[10px] text-white/50">' + esc(eur(t.rate)) + "</span>" +
+          "</button></li>"
       )
       .join("");
 
@@ -1374,8 +1420,10 @@
     const text = $("#post-input").value.trim();
     if (!text && !draftMedia) return;
 
+    const own = ownTalent();
     state.posts.unshift({
       id: uid("p"), authorName: author.name, authorRole: author.role, authorCity: author.city,
+      authorTalentId: own ? own.id : null, missionId: null, type: "actu",
       ts: Date.now(), own: true, likes: 0, liked: false, text: text, media: draftMedia, comments: [],
     });
 
@@ -1389,6 +1437,15 @@
   });
 
   $("#feed-list").addEventListener("click", (e) => {
+    const bookBtn = e.target.closest("[data-feed-book]");
+    if (bookBtn) { openBookingDrawer(bookBtn.dataset.feedBook); return; }
+
+    const missionBtn = e.target.closest("[data-feed-mission]");
+    if (missionBtn) { openMissionSheet(missionBtn.dataset.feedMission); return; }
+
+    const authorEl = e.target.closest("[data-feed-author]");
+    if (authorEl) { openTalentSheet(authorEl.dataset.feedAuthor); return; }
+
     const likeBtn = e.target.closest("[data-post-like]");
     if (likeBtn) {
       const post = state.posts.filter((p) => p.id === likeBtn.dataset.postLike)[0];
@@ -1420,6 +1477,11 @@
       renderFeed();
       toast("Publication supprimée.");
     }
+  });
+
+  $("#side-available").addEventListener("click", (e) => {
+    const row = e.target.closest("[data-side-talent]");
+    if (row) openTalentSheet(row.dataset.sideTalent);
   });
 
   $("#feed-list").addEventListener("submit", (e) => {
