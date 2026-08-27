@@ -1,4 +1,4 @@
-import app from "./app.js";
+import app from "./createApp.js";
 import { config } from "./config.js";
 
 export default app;
